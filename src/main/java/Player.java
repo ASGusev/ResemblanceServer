@@ -37,7 +37,7 @@ public class Player {
         return password;
     }
 
-    public void sendCard(int card) {
+    public void sendCard(Long card) {
         throw new UnsupportedOperationException();
     }
 

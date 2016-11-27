@@ -1,16 +1,13 @@
 import java.sql.Array;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Game {
+public class Game implements Runnable {
     public static Map<Long,Game> activeGames;
 
     private int playersNumber = 0;
     private Player[] players = null;
-    private ArrayDeque<Integer> deck = null;
+    private ArrayDeque<Long> deck = null;
     private int[] scores = null;
     private static final int INITIAL_CARDS_NUMBER = 6;
     private int roundsNumber = 0;
@@ -19,21 +16,17 @@ public class Game {
         activeGames = new ConcurrentHashMap<>();
     }
 
-    Game(Player[] newPlayers, int newCardsNumber, int newRoundsNumber) {
+    Game(Player[] newPlayers, ArrayList<Long> cards, int newRoundsNumber) {
         playersNumber = newPlayers.length;
         players = newPlayers;
         roundsNumber = newRoundsNumber;
 
-        //Generating card deck
-        ArrayList<Integer> cards = new ArrayList<Integer>(newCardsNumber);
-        for (int i = 0; i < newCardsNumber; i++) {
-            cards.add(i);
-        }
         Collections.shuffle(cards);
-        deck = new ArrayDeque<Integer>(cards);
+
+        deck = new ArrayDeque<Long>(cards);
     }
 
-    public void playGame() {
+    public void run() {
         //Handing players their initial cards
         for (int i = 0; i < INITIAL_CARDS_NUMBER; i++) {
             for (Player p: players) {
