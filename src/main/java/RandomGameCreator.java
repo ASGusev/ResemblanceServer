@@ -1,29 +1,20 @@
 import java.util.ArrayList;
 
-public class RandomGameCreator {
-    private static ArrayList<Long> DEFAULT_CARD_SET = new ArrayList<>();
-
-    public static final int PLAYERS_PER_GAME = 3;
+public class RandomGameCreator {public static final int PLAYERS_PER_GAME = 3;
     public static final int DEFAULT_ROUNDS_NUMBER = 3;
 
     private static ArrayList<Player> waitingPlayers = new ArrayList<>();
 
-    static {
-        DEFAULT_CARD_SET.add(1L);
-        DEFAULT_CARD_SET.add(2L);
-        DEFAULT_CARD_SET.add(3L);
-        DEFAULT_CARD_SET.add(4L);
-        DEFAULT_CARD_SET.add(5L);
-        DEFAULT_CARD_SET.add(6L);
-        DEFAULT_CARD_SET.add(7L);
-        DEFAULT_CARD_SET.add(8L);
-    }
-
     public static void addPlayer(Player player) {
         waitingPlayers.add(player);
         if (waitingPlayers.size() == PLAYERS_PER_GAME) {
-            Game game = new Game((Player[])waitingPlayers.toArray(), DEFAULT_CARD_SET,
-                    DEFAULT_ROUNDS_NUMBER);
+            Player[] playersArr = new Player[waitingPlayers.size()];
+            for(int i = 0; i < waitingPlayers.size(); i++) {
+                playersArr[i] = waitingPlayers.get(i);
+            }
+            Game game = new Game(playersArr, Main.DEFAULT_CARD_SET, DEFAULT_ROUNDS_NUMBER);
+            new Thread(game).start();
+            waitingPlayers = new ArrayList<>();
         }
     }
 }

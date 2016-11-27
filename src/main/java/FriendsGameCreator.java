@@ -26,7 +26,12 @@ public class FriendsGameCreator {
     }
 
     public void startGame() {
-        Game game = new Game((Player[])players.toArray(), cards, roundsNumber);
+        Player[] playersArr = new Player[players.size()];
+        for(int i = 0; i < players.size(); i++) {
+            playersArr[i] = players.get(i);
+        }
+
+        Game game = new Game(playersArr, cards, roundsNumber);
         new Thread(game).start();
         preparingGames.remove(players.get(0).getName());
     }

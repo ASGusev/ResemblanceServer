@@ -27,6 +27,11 @@ public class Game implements Runnable {
     }
 
     public void run() {
+        for(Player p: players) {
+            p.sendGameStart();
+        }
+        scores = new int[players.length];
+
         //Handing players their initial cards
         for (int i = 0; i < INITIAL_CARDS_NUMBER; i++) {
             for (Player p: players) {
@@ -41,6 +46,8 @@ public class Game implements Runnable {
             curRound.playRound();
             leader = (leader + 1) % playersNumber;
         }
+
+        //Recalculate ratings
     }
 
     public class Association {

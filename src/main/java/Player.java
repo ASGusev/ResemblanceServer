@@ -56,4 +56,6 @@ public class Player {
     public void sendLeadersAssociation(int card) {
         throw new UnsupportedOperationException();
     }
+
+    public void sendGameStart(){};
 }
