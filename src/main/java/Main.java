@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Main {
@@ -16,7 +17,7 @@ public class Main {
 
     public static void main(String[] args) {
         //Starting network part
-
+        Server.start();
         Object waitingObject = new Object();
         while (true) {
             try {
