@@ -12,7 +12,7 @@ public class RandomGameCreator {public static final int PLAYERS_PER_GAME = 3;
             for(int i = 0; i < waitingPlayers.size(); i++) {
                 playersArr[i] = waitingPlayers.get(i);
             }
-            Game game = new Game(playersArr, Main.DEFAULT_CARD_SET, DEFAULT_ROUNDS_NUMBER);
+            Game game = new Game(playersArr, Main.DEFAULT_CARD_SETS[0], DEFAULT_ROUNDS_NUMBER);
             new Thread(game).start();
             waitingPlayers = new ArrayList<>();
         }
