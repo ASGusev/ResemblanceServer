@@ -6,6 +6,7 @@ public class Player {
     private int rating = DEFULT_RATING;
     private String name = "";
     private long password = 0;
+    private Game currentGame;
 
     Player() {}
 
@@ -33,27 +34,35 @@ public class Player {
         return rating;
     }
 
-    public long getPassword() {
-        return password;
+    //public long getPassword() {
+    //    return password;
+    //}
+
+    public void setGame(Game game) {
+        currentGame = game;
+    }
+
+    public Game getGame() {
+        return currentGame;
     }
 
     public void sendCard(Long card) {
         throw new UnsupportedOperationException();
     }
 
-    public Game.Association askForAssociation() {
-        throw new UnsupportedOperationException();
+    public void askForAssociation() {
+        //TODO: Send the player a message asking him for an association
     };
 
     public int askForCard(String form) {
         throw new UnsupportedOperationException();
     };
 
-    public int getVote(ArrayList<Integer> cards) {
-        throw new UnsupportedOperationException();
+    public void askForVote(ArrayList<Long> cards) {
+        //TODO: Send player am message asking hm to vote
     }
 
-    public void sendLeadersAssociation(int card) {
+    public void sendLeadersAssociation(long card) {
         throw new UnsupportedOperationException();
     }
 

@@ -29,12 +29,7 @@ public class FriendsGameCreator {
     public static void startGame(String name) {
         FriendsGameCreator gameCreator = preparingGames.get(name);
 
-        Player[] playersArr = new Player[gameCreator.players.size()];
-        for(int i = 0; i < gameCreator.players.size(); i++) {
-            playersArr[i] = gameCreator.players.get(i);
-        }
-
-        Game game = new Game(playersArr, gameCreator.cards, gameCreator.roundsNumber);
+        Game game = new Game(gameCreator.players, gameCreator.cards, gameCreator.roundsNumber);
         new Thread(game).start();
         preparingGames.remove(gameCreator.players.get(0).getName());
     }

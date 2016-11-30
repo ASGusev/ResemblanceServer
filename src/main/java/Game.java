@@ -1,23 +1,28 @@
-import java.sql.Array;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Game implements Runnable {
     public static Map<Long,Game> activeGames;
 
+    private static final long PERIOD = 3000;
+    private static final long CHOICE_WAIT_TIME = 60 * 1000;
+    private static final long VOTE_WAIT_TIME = 60 * 1000;
+
     private int playersNumber = 0;
-    private Player[] players = null;
+    private ArrayList<Player> players = null;
     private ArrayDeque<Long> deck = null;
     private int[] scores = null;
     private static final int INITIAL_CARDS_NUMBER = 6;
     private int roundsNumber = 0;
+    private final ArrayDeque<ChoiceMessage> messages = new ArrayDeque<>();
+    private final Date clock = new Date();
 
     static {
         activeGames = new ConcurrentHashMap<>();
     }
 
-    Game(Player[] newPlayers, ArrayList<Long> cards, int newRoundsNumber) {
-        playersNumber = newPlayers.length;
+    Game(ArrayList<Player> newPlayers, ArrayList<Long> cards, int newRoundsNumber) {
+        playersNumber = newPlayers.size();
         players = newPlayers;
         roundsNumber = newRoundsNumber;
 
@@ -30,7 +35,7 @@ public class Game implements Runnable {
         for(Player p: players) {
             p.sendGameStart();
         }
-        scores = new int[players.length];
+        scores = new int[playersNumber];
 
         //Handing players their initial cards
         for (int i = 0; i < INITIAL_CARDS_NUMBER; i++) {
@@ -47,19 +52,25 @@ public class Game implements Runnable {
             leader = (leader + 1) % playersNumber;
         }
 
-        //Recalculate ratings
+        //TODO: Recalculate ratings
+    }
+
+    public void addMessage(ChoiceMessage message) {
+        synchronized (messages) {
+            messages.addLast(message);
+        }
     }
 
     public class Association {
-        private int card;
+        private long card;
         private String form;
 
-        Association(int newCard, String newForm) {
+        Association(long newCard, String newForm) {
             card = newCard;
             form = newForm;
         }
 
-        public int getCard() {
+        public long getCard() {
             return card;
         }
 
@@ -68,11 +79,39 @@ public class Game implements Runnable {
         }
     }
 
+    public static class ChoiceMessage {
+        private Player player;
+        private long card;
+        private String association;
+
+        ChoiceMessage(Player player, long card) {
+            this(player, card, null);
+        }
+
+        ChoiceMessage(Player player, long card, String association) {
+            this.player = player;
+            this.card = card;
+            this.association = association;
+        }
+
+        public Player getPlayer() {
+            return player;
+        }
+
+        public long getCard() {
+            return card;
+        }
+
+        public String getAssociation() {
+            return association;
+        }
+    }
+
     private class Round {
         private int leader = -1;
         private Association association = null;
-        private ArrayList<Integer> choices = null;
-        private int votes[] = null;
+        private ArrayList<Long> choices = new ArrayList<Long>(playersNumber);
+        private long votes[] = new long[playersNumber];
 
         Round(int newLeader) {
             leader = newLeader;
@@ -86,38 +125,88 @@ public class Game implements Runnable {
         }
 
         private void askLeader() {
-            association = players[leader].askForAssociation();
+            players.get(leader).askForAssociation();
+            boolean received = false;
+            while (!received) {
+                try {
+                    Thread.sleep(PERIOD);
+                } catch (InterruptedException e) {
+                } finally {
+                    synchronized (messages) {
+                        if (!messages.isEmpty()) {
+                            received = true;
+                            ChoiceMessage message = messages.getLast();
+                            messages.removeLast();
+                            association = new Association(message.getCard(),
+                                    message.getAssociation());
+                        }
+                    }
+                }
+            }
             choices.set(leader, association.getCard());
-            //TODO: leader's association
         }
 
         private void playChoice() {
-            choices = new ArrayList<Integer>(playersNumber);
             for (int i = 0; i < playersNumber; i++) {
                 if (i != leader) {
-                    //Very-very bad
-                    players[i].askForCard(association.getForm());
+                    players.get(i).askForCard(association.getForm());
                 }
             }
-            //TODO: here we need to somehow get players' choice
+
+            long startTime = clock.getTime();
+            int receivedChoices = 1;
+            while (clock.getTime() < startTime + CHOICE_WAIT_TIME &&
+                    receivedChoices < playersNumber) {
+                try {
+                    Thread.sleep(PERIOD);
+                } catch (InterruptedException e){}
+                synchronized (messages) {
+                    while (!messages.isEmpty()) {
+                        ChoiceMessage message = messages.getFirst();
+                        messages.removeFirst();
+
+                        int playerIndex = players.indexOf(message.getPlayer());
+
+                        choices.set(playerIndex, message.getCard());
+                        receivedChoices++;
+                    }
+                }
+            }
+            //TODO: do something with disconnected players
         }
 
         private void playVote() {
-            votes = new int[playersNumber];
             for (int i = 0; i < playersNumber; i++) {
                 if (i != leader) {
-                    //Very-very bad
-                    votes[i] = players[i].getVote(choices);
+                    players.get(i).askForVote(choices);
                 }
             }
-            //TODO: here we need to get players' votes
+
+            long startTime = clock.getTime();
+            int receivedVoices = 0;
+            while (clock.getTime() < startTime && receivedVoices < playersNumber - 1) {
+                try {
+                    Thread.sleep(PERIOD);
+                } catch (InterruptedException e) {}
+                synchronized (messages) {
+                    while (!messages.isEmpty()) {
+                        ChoiceMessage message = messages.getFirst();
+                        messages.removeFirst();
+
+                        int playerIndex = players.indexOf(message.getPlayer());
+
+                        votes[playerIndex] = message.getCard();
+                    }
+                }
+            }
+            //TODO: we still need to do something with disconnected players
         }
 
         private void countScores() {
             //Sending all the players the leader's association
             for (int i = 0; i < playersNumber; i++) {
                 if (i != leader) {
-                    players[i].sendLeadersAssociation(association.getCard());
+                    players.get(i).sendLeadersAssociation(association.getCard());
                 }
             }
 
