@@ -57,5 +57,5 @@ public class Player {
         throw new UnsupportedOperationException();
     }
 
-    public void sendGameStart(){};
+    public void sendGameStart() {};
 }

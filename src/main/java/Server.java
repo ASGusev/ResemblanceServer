@@ -13,7 +13,7 @@ public class Server {
             @Override
             public void run() {
                 System.out.println(3);
-                int port = 6662;
+                int port = 6679;
                 try {
                     ServerSocket ss = new ServerSocket(port);
                     System.out.println("Wait a client");
@@ -27,7 +27,7 @@ public class Server {
                         ClientThread curClient = new ClientThread(socket);
                         curClient.start();
                     }
-                } catch(Exception е) { е.printStackTrace(); }
+                } catch(Exception е) { System.exit(-1);е.printStackTrace(); }
             }
         };
         curThread.start();
@@ -87,9 +87,13 @@ public class Server {
 
         @Override
         public void run() {
+            //System.exit(-1);
             while(true) {
                 try {
+                    if (!socket.isConnected())
+                        System.exit(-1);
                     String textNewMessage = in.readUTF();
+                    System.exit(-1);
                     Message newMessage = new Message(textNewMessage, socket);
                     newMessage.applyMessage();
                 }
