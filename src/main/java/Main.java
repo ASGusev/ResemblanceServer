@@ -1,5 +1,6 @@
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Main {
     public static ArrayList<Long> DEFAULT_CARD_SETS[] = new ArrayList[1];
@@ -16,9 +17,9 @@ public class Main {
         DEFAULT_CARD_SETS[0].add(8L);
     }
 
-    public static void main(String[] args) {
-        //Starting network part
-        Server.start();
+    public static void main(String[] args) throws IOException {
+
+        MessageModule.start();
         Object waitingObject = new Object();
         while (true) {
             try {

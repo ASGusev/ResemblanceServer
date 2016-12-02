@@ -4,7 +4,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 
-public class Server {
+public class MessageModule {
     private final static int maxCntToReconnect = 10;
     private final static int sleepTime = 1000;
     private static HashMap<String, ClientThread> clientTreadFromName = new HashMap<>();
@@ -43,25 +43,7 @@ public class Server {
         return  clientNameFromSocket.get(socket);
     }
 
-    public static void sendMessage(String name, String message) {
-        if (name != null && message != null) {
-            ClientThread clientThread = clientTreadFromName.get(name);
-            if (clientThread != null) {
-                clientThread.sendMessage(message);
-            }
-        }
-    }
-    public static void sendMessage(Socket socket, String message) {
-        sendMessage(clientNameFromSocket.get(socket), message);
-    }
-    public static void sendMessage(String name, Message message) {
-        sendMessage(name, message.getStringMessage());
-    }
-    public static void sendMessage(Socket socket, Message message) {
-        sendMessage(socket, message.getStringMessage());
-    }
-
-    private static class ClientThread extends Thread {
+    public static class ClientThread extends Thread {
         private Socket socket;
         private DataInputStream in = null;
         private DataOutputStream out = null;
@@ -113,11 +95,15 @@ public class Server {
 
             //-----
 
+            new Message(this, Message.TEST_TYPE).sendTestMessage("test message from server");
+
             while(true) {
-                String textNewMessage = null;
+                int typeMessage = -1;
                 for (int i = 0; i < maxCntToReconnect; ++i) {
                     try {
-                        textNewMessage = in.readUTF();
+                        synchronized (in) {
+                            typeMessage = in.readInt();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                         try {
@@ -129,21 +115,20 @@ public class Server {
                     }
                     break;
                 }
-                if (textNewMessage == null) {
+                if (typeMessage == -1) {
                     synchronized (connectionError) {
                         connectionError = true;
                     }
                     return;
                 }
-                System.out.println(textNewMessage);
-                Message newMessage = new Message(textNewMessage, socket);
-                newMessage.applyMessage();
+                Message newMessage = new Message(typeMessage);
+                newMessage.readMessage(in);
             }
         }
 
-        synchronized private boolean tryToSendMessage(String message) {
+        synchronized private boolean tryToSendMessage(byte[] message) {
             try {
-                out.writeUTF(message);
+                out.write(message);
                 out.flush();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -152,7 +137,7 @@ public class Server {
             return true;
         }
 
-        private void sendMessage(final String message) {
+        public void sendMessage(final byte[] message) {
             synchronized (connectionError) {
                 if (connectionError) {
                     return;
@@ -182,5 +167,4 @@ public class Server {
             curThread.start();
         }
     }
-    public static Message TEST_MESSAGE = new Message("test test");
 }
