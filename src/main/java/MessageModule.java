@@ -7,8 +7,6 @@ import java.util.HashMap;
 public class MessageModule {
     private final static int maxCntToReconnect = 10;
     private final static int sleepTime = 1000;
-    private static HashMap<String, ClientThread> clientTreadFromName = new HashMap<>();
-    private static HashMap<Socket, String> clientNameFromSocket = new HashMap<>();
 
     public static void start() {
         Thread curThread = new Thread() {
@@ -36,12 +34,6 @@ public class MessageModule {
     }
 
 
-    public static String getName(Socket socket) {
-        if (socket == null) {
-            return null;
-        }
-        return  clientNameFromSocket.get(socket);
-    }
 
     public static class ClientThread extends Thread {
         private Socket socket;
@@ -77,6 +69,7 @@ public class MessageModule {
                     if (out == null) {
                         out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                     }
+                    break;
                 } catch (IOException e) {
                     e.printStackTrace();
                     try {
@@ -84,9 +77,7 @@ public class MessageModule {
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
-                    continue;
                 }
-                break;
             }
             if (in == null || out == null) {
                 connectionError = true;
@@ -104,6 +95,7 @@ public class MessageModule {
                         synchronized (in) {
                             typeMessage = in.readInt();
                         }
+                        break;
                     } catch (Exception e) {
                         e.printStackTrace();
                         try {
@@ -111,9 +103,7 @@ public class MessageModule {
                         } catch (InterruptedException e1) {
                             e1.printStackTrace();
                         }
-                        continue;
                     }
-                    break;
                 }
                 if (typeMessage == -1) {
                     synchronized (connectionError) {
