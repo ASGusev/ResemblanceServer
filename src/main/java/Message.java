@@ -59,6 +59,15 @@ public class Message {
             case QUIT_RANDOM_GAME_TYPE:
                 readQuitRandomGameMessage(in);
                 break;
+            case LEAD_ASSOCIATION_TYPE:
+                readLeadAssociationMessage(in);
+                break;
+            case CHOICE_TYPE:
+                readChoiceMessage(in);
+                break;
+            case VOTE_TYPE:
+                readVoteMessage(in);
+                break;
         }
     }
 
