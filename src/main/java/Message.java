@@ -5,6 +5,9 @@ public class Message {
     final public static int TEST_TYPE = 0;
     final public static int REGISTER_TYPE = 1;
     final public static int LOGIN_TYPE = 2;
+    final public static int JOIN_RANDOM_GAME_TYPE = 3;
+    final public static int QUIT_RANDOM_GAME_TYPE = 4;
+    final public static int START_GAME_TYPE = 5;
 
     MessageModule.ClientThread client;
     private int type = 0;
@@ -40,6 +43,12 @@ public class Message {
                 break;
             case LOGIN_TYPE:
                 readLoginMessage(in);
+                break;
+            case JOIN_RANDOM_GAME_TYPE:
+                readJoinRandomGameMessage(in);
+                break;
+            case QUIT_RANDOM_GAME_TYPE:
+                readQuitRandomGameMessage(in);
                 break;
         }
     }
@@ -82,6 +91,14 @@ public class Message {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void readJoinRandomGameMessage(DataInputStream str) {
+        //RandomGameCreator.addPlayer(<getting player>);
+    }
+
+    private void readQuitRandomGameMessage(DataInputStream str) {
+        //RandomGameCreator.removePlayer(<Getting player>);
     }
 
     private void applyTest(String textMessage) {

@@ -1,12 +1,16 @@
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Player {
-    public static final int DEFULT_RATING = 500;
+    public static final int DEFAULT_RATING = 500;
 
-    private int rating = DEFULT_RATING;
+    private int rating = DEFAULT_RATING;
     private String name = "";
     private String password = null;
     private Game currentGame;
+    private MessageModule.ClientThread messageThread;
 
     Player() {}
 
@@ -23,7 +27,7 @@ public class Player {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof Player && ((Player) other).name == name;
+        return other instanceof Player && name.equals(((Player) other).name);
     }
 
     public String getName() {
@@ -34,16 +38,16 @@ public class Player {
         return rating;
     }
 
-    //public long getPassword() {
-    //    return password;
-    //}
-
     public void setGame(Game game) {
         currentGame = game;
     }
 
     public Game getGame() {
         return currentGame;
+    }
+
+    public void setClientThread(MessageModule.ClientThread thread) {
+        messageThread = thread;
     }
 
     public void sendCard(Long card) {
@@ -66,5 +70,16 @@ public class Player {
         throw new UnsupportedOperationException();
     }
 
-    public void sendGameStart() {};
+    public void sendGameStart() {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.START_GAME_TYPE);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //TODO: pass byteOS.toByteArray(); to player's send message
+    };
 }
