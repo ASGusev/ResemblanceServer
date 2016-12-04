@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.stream.Stream;
 
 public class Message {
     final public static int TEST_TYPE = 0;
@@ -101,12 +102,43 @@ public class Message {
         }
     }
 
-    private void readJoinRandomGameMessage(DataInputStream str) {
+    private void readJoinRandomGameMessage(DataInputStream stream) {
         //RandomGameCreator.addPlayer(<getting player>);
     }
 
-    private void readQuitRandomGameMessage(DataInputStream str) {
+    private void readQuitRandomGameMessage(DataInputStream stream) {
         //RandomGameCreator.removePlayer(<Getting player>);
+    }
+
+    private void readLeadAssociationMessage(DataInputStream stream) {
+        long card;
+        String association;
+        try {
+            card = stream.readLong();
+            association = stream.readUTF();
+        } catch (IOException e) {
+
+        }
+        //Game.ChoiceMessage message = new Game.ChoiceMessage(<player>, card, association);
+        //TODO: Add message to player's game
+    }
+
+    private void readChoiceMessage(DataInputStream stream) {
+        long card;
+        try {
+            card = stream.readLong();
+            //Game.ChoiceMessage message = new Game.ChoiceMessage(<player>, card);
+            //TODO: Add message to pllayer's Game
+        } catch (IOException e) {}
+    }
+
+    private void readVoteMessage(DataInputStream stream) {
+        long card;
+        try {
+            card = stream.readLong();
+            //Game.ChoiceMessage message = new Game.ChoiceMessage(<player>, card);
+            //TODO: Add message to pllayer's Game
+        } catch (IOException e) {}
     }
 
     private void applyTest(String textMessage) {
