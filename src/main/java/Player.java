@@ -5,7 +5,7 @@ public class Player {
 
     private int rating = DEFULT_RATING;
     private String name = "";
-    private long password = 0;
+    private String password = null;
     private Game currentGame;
 
     Player() {}
@@ -15,7 +15,7 @@ public class Player {
         this.rating = rating;
     }
 
-    Player(String name, int rating, long password) {
+    Player(String name, int rating, String password) {
         this.name = name;
         this.rating = rating;
         this.password = password;
