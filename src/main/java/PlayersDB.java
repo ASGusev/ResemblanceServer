@@ -56,6 +56,6 @@ public class PlayersDB {
 
     public static void register(String name, String password) throws SQLException {
         statement.execute("INSERT INTO 'players' VALUES ('" + name + "', '"
-                + Player.DEFULT_RATING + "', '" + password + "'); ");
+                + Player.DEFAULT_RATING + "', '" + password + "'); ");
     }
 }

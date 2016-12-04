@@ -9,7 +9,7 @@ public class Player {
     private int rating = DEFAULT_RATING;
     private String name = "";
     private String password = null;
-    private Game currentGame;
+    private Game game;
     private MessageModule.ClientThread messageThread;
 
     Player() {}
@@ -39,11 +39,11 @@ public class Player {
     }
 
     public void setGame(Game game) {
-        currentGame = game;
+        this.game = game;
     }
 
     public Game getGame() {
-        return currentGame;
+        return game;
     }
 
     public void setClientThread(MessageModule.ClientThread thread) {
@@ -51,24 +51,66 @@ public class Player {
     }
 
     public void sendCard(Long card) {
-        throw new UnsupportedOperationException();
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.SEND_CARD_TYPE);
+            out.writeLong(card);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        messageThread.sendMessage(byteOS.toByteArray());
     }
 
     public void askForAssociation() {
-        //TODO: Send the player a message asking him for an association
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.LEAD_REQUEST_TYPE);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        messageThread.sendMessage(byteOS.toByteArray());
     };
 
-    public int askForCard(String form) {
-        throw new UnsupportedOperationException();
+    public void askForCard(String form) {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.CHOICE_REQUEST_TYPE);
+            out.writeUTF(form);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        messageThread.sendMessage(byteOS.toByteArray());
     };
 
     public void askForVote(ArrayList<Long> cards) {
-        //TODO: Send player am message asking hm to vote
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.VOTE_REQUEST_TYPE);
+            out.writeInt(cards.size());
+            for (Long card: cards) {
+                out.writeLong(card);
+            }
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        messageThread.sendMessage(byteOS.toByteArray());
     }
 
-    public void sendLeadersAssociation(long card) {
-        throw new UnsupportedOperationException();
-    }
+    //public void sendLeadersAssociation(long card) {
+    //    throw new UnsupportedOperationException();
+    //}
 
     public void sendGameStart() {
         ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
@@ -80,6 +122,20 @@ public class Player {
             e.printStackTrace();
         }
 
-        //TODO: pass byteOS.toByteArray(); to player's send message
+        messageThread.sendMessage(byteOS.toByteArray());
     };
+
+    public void sendLeadersAssociation(long association) {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.LEADERS_ASSOCIATION_TYPE);
+            out.writeLong(association);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        messageThread.sendMessage(byteOS.toByteArray());
+    }
 }

@@ -8,6 +8,14 @@ public class Message {
     final public static int JOIN_RANDOM_GAME_TYPE = 3;
     final public static int QUIT_RANDOM_GAME_TYPE = 4;
     final public static int START_GAME_TYPE = 5;
+    final public static int SEND_CARD_TYPE = 6;
+    final public static int LEAD_REQUEST_TYPE = 7;
+    final public static int LEAD_ASSOCIATION_TYPE = 8;
+    final public static int CHOICE_REQUEST_TYPE = 9;
+    final public static int CHOICE_TYPE = 10;
+    final public static int VOTE_REQUEST_TYPE = 11;
+    final public static int VOTE_TYPE = 12;
+    final public static int LEADERS_ASSOCIATION_TYPE = 13;
 
     MessageModule.ClientThread client;
     private int type = 0;
