@@ -1,5 +1,6 @@
 import java.io.*;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.stream.Stream;
 
 public class Message {
@@ -85,13 +86,13 @@ public class Message {
 
     private void readRegisterMessage(DataInputStream in) {
         String login = null;
-        long hashPassword = 0;
+        String hashPassword = null;
         try {
             synchronized (in) {
                 login = in.readUTF();
-                hashPassword = in.readLong();
+                hashPassword = in.readUTF();
             }
-            //applyRegister(login, hashPassword);
+            applyRegister(login, hashPassword);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -99,13 +100,13 @@ public class Message {
 
     private void readLoginMessage(DataInputStream in) {
         String login = null;
-        long hashPassword = 0;
+        String hashPassword = null;
         try {
             synchronized (in) {
                 login = in.readUTF();
-                hashPassword = in.readLong();
+                hashPassword = in.readUTF();
             }
-            //applyLogin(login, hashPassword);
+            applyLogin(login, hashPassword);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -150,9 +151,75 @@ public class Message {
         } catch (IOException e) {}
     }
 
+    //-----------------------------------------------------------------------
+
     private void applyTest(String textMessage) {
         System.out.println(textMessage);
     }
+
+    private void applyRegister(String nickname, String hashPassword) {
+        System.out.println("1");
+        final int networkError = -1;
+        final int successfulRegistration = 0;
+        final int nicknameError = 1;
+
+        System.out.println("a");
+        if (nickname == null || hashPassword == null) {
+            sendRegisterMessage(networkError);
+            return;
+        }
+
+        System.out.println("b");
+        try {
+            if (PlayersDB.exists(nickname)) {
+                sendRegisterMessage(nicknameError);
+                System.out.println("c");
+                return;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        System.out.println("d");
+        try {
+            PlayersDB.register(nickname, hashPassword);
+            System.out.println("e");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("f");
+        sendRegisterMessage(successfulRegistration);
+    }
+
+    private void applyLogin(String nickname, String hashPassword) {
+        final int networkError = -1;
+        final int successfulLogin = 0;
+        final int nicknameError = 1;
+        final int passwordError = 2;
+
+        if (nickname == null || hashPassword == null) {
+            sendLoginMessage(networkError);
+            return;
+        }
+
+        try {
+            if (!PlayersDB.exists(nickname)) {
+                sendRegisterMessage(nicknameError);
+                return;
+            }
+            if (!PlayersDB.checkPassword(nickname, hashPassword)) {
+                sendRegisterMessage(passwordError);
+                return;
+            }
+            client.setPlayer(PlayersDB.getPlayer(nickname, hashPassword));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        sendRegisterMessage(successfulLogin);
+    }
+
+
+    //-----------------------------------------------------------------------
 
     public void sendTestMessage(String textMessage) {
         ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
@@ -160,6 +227,33 @@ public class Message {
         try {
             out.writeInt(TEST_TYPE);
             out.writeUTF(textMessage);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        client.sendMessage(byteOS.toByteArray());
+    }
+
+    private void sendRegisterMessage(int resultCode) {
+        System.out.println("2");
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(REGISTER_TYPE);
+            out.writeInt(resultCode);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        client.sendMessage(byteOS.toByteArray());
+    }
+
+    private void sendLoginMessage(int resultCode) {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(LOGIN_TYPE);
+            out.writeInt(resultCode);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();

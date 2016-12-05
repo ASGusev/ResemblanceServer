@@ -40,7 +40,7 @@ public class MessageModule {
         private DataInputStream in = null;
         private DataOutputStream out = null;
         private Boolean connectionError = false;
-        private String clientName = null;
+        private Player player = null;
 
         ClientThread(Socket socket) {
             this.socket = socket;
@@ -49,12 +49,14 @@ public class MessageModule {
         public Socket getSocket() {
             return socket;
         }
-        public String getCleintName() {
-            return clientName;
+        public Player getPlayer() {
+            return player;
         }
         public boolean isConnected() {
             return !connectionError;
         }
+
+        public void setPlayer(Player newPlayer) { player = newPlayer; }
 
         @Override
         public void run() {
