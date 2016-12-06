@@ -25,28 +25,28 @@ public class PlayersDB {
     public static boolean checkPassword(String name, String passwordHash)
             throws SQLException {
         return statement.executeQuery("SELECT * FROM players " +
-                " WHERE nickname = '" + name + "' AND password_hash = "
-                + passwordHash + ";").next();
+                " WHERE nickname = '" + name + "' AND password_hash = '"
+                + passwordHash + "';").next();
     }
 
     public static void changePassword(String name, String oldPasswordHash,
                                       String newPasswordHash) throws SQLException {
-        statement.execute("UPDATE players SET password_hash = " + newPasswordHash +
-                " WHERE nickname = '" + name + "' AND password_hash = " +
-                oldPasswordHash + ";");
+        statement.execute("UPDATE players SET password_hash = '" + newPasswordHash +
+                "' WHERE nickname = '" + name + "' AND password_hash = '" +
+                oldPasswordHash + "';");
     }
 
     public static void updateRating(String name, String passwordHash, int newRating)
             throws SQLException {
         statement.execute("UPDATE players SET rating = " + newRating +
-                " WHERE nickname = '" + name + "' AND password_hash = " +
-                passwordHash + ";");
+                " WHERE nickname = '" + name + "' AND password_hash = '" +
+                passwordHash + "';");
     }
 
     public static Player getPlayer(String name, String passwordHash) throws SQLException {
         ResultSet baseRet = statement.executeQuery("SELECT * FROM players " +
-                " WHERE nickname = '" + name + "' AND password_hash = "
-                + passwordHash + ";");
+                " WHERE nickname = '" + name + "' AND password_hash = '"
+                + passwordHash + "';");
         String nick = baseRet.getString("nickname");
         int rating = baseRet.getInt("rating");
         String password = baseRet.getString("password_hash");

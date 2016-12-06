@@ -38,6 +38,10 @@ public class Player {
         return rating;
     }
 
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
     public void setGame(Game game) {
         this.game = game;
     }
@@ -108,10 +112,6 @@ public class Player {
         messageThread.sendMessage(byteOS.toByteArray());
     }
 
-    //public void sendLeadersAssociation(long card) {
-    //    throw new UnsupportedOperationException();
-    //}
-
     public void sendGameStart() {
         ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
         DataOutputStream out = new DataOutputStream(byteOS);
@@ -131,6 +131,20 @@ public class Player {
         try {
             out.writeInt(Message.LEADERS_ASSOCIATION_TYPE);
             out.writeLong(association);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        messageThread.sendMessage(byteOS.toByteArray());
+    }
+
+    public void sendRating() {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.RATING_TYPE);
+            out.writeInt(rating);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();

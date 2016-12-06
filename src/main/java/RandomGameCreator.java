@@ -1,7 +1,8 @@
 import java.util.ArrayList;
 
-public class RandomGameCreator {public static final int PLAYERS_PER_GAME = 3;
-    public static final int DEFAULT_ROUNDS_NUMBER = 3;
+public class RandomGameCreator {
+    public static final int PLAYERS_PER_GAME = 2;
+    public static final int DEFAULT_ROUNDS_NUMBER = 2;
 
     private static ArrayList<Player> waitingPlayers = new ArrayList<>();
 

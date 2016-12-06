@@ -18,6 +18,7 @@ public class Message {
     final public static int VOTE_REQUEST_TYPE = 11;
     final public static int VOTE_TYPE = 12;
     final public static int LEADERS_ASSOCIATION_TYPE = 13;
+    final public static int RATING_TYPE = 14;
 
     MessageModule.ClientThread client;
     private int type = 0;
@@ -113,32 +114,30 @@ public class Message {
     }
 
     private void readJoinRandomGameMessage(DataInputStream stream) {
-        //RandomGameCreator.addPlayer(<getting player>);
+        RandomGameCreator.addPlayer(client.getPlayer());
     }
 
     private void readQuitRandomGameMessage(DataInputStream stream) {
-        //RandomGameCreator.removePlayer(<Getting player>);
+        RandomGameCreator.removePlayer(client.getPlayer());
     }
 
     private void readLeadAssociationMessage(DataInputStream stream) {
-        long card;
-        String association;
+        long card = -1;
+        String association = null;
         try {
             card = stream.readLong();
             association = stream.readUTF();
-        } catch (IOException e) {
-
-        }
-        //Game.ChoiceMessage message = new Game.ChoiceMessage(<player>, card, association);
-        //TODO: Add message to player's game
+            client.getPlayer().getGame().addMessage(new
+                    Game.ChoiceMessage(client.getPlayer(), card, association));
+        } catch (IOException e) {}
     }
 
     private void readChoiceMessage(DataInputStream stream) {
         long card;
         try {
             card = stream.readLong();
-            //Game.ChoiceMessage message = new Game.ChoiceMessage(<player>, card);
-            //TODO: Add message to pllayer's Game
+            client.getPlayer().getGame().addMessage(new
+                    Game.ChoiceMessage(client.getPlayer(), card));
         } catch (IOException e) {}
     }
 
@@ -146,8 +145,8 @@ public class Message {
         long card;
         try {
             card = stream.readLong();
-            //Game.ChoiceMessage message = new Game.ChoiceMessage(<player>, card);
-            //TODO: Add message to pllayer's Game
+            client.getPlayer().getGame().addMessage(new
+                    Game.ChoiceMessage(client.getPlayer(), card));
         } catch (IOException e) {}
     }
 
