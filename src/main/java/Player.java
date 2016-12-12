@@ -153,4 +153,8 @@ public class Player {
 
         messageThread.sendMessage(byteOS.toByteArray());
     }
+
+    public void sendMessage(byte[] message) {
+        messageThread.sendMessage(message);
+    }
 }

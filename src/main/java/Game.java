@@ -1,9 +1,10 @@
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Game implements Runnable {
-    public static Map<Long,Game> activeGames = new ConcurrentHashMap<>();
-
     private static final long PERIOD = 3000;
     private static final long CHOICE_WAIT_TIME = 60 * 1000;
     private static final long VOTE_WAIT_TIME = 60 * 1000;
@@ -36,9 +37,11 @@ public class Game implements Runnable {
     }
 
     public void run() {
+        byte[] gameStartMessage = makeGameStartMessage();
+
         for(Player p: players) {
             p.setGame(this);
-            p.sendGameStart();
+            p.sendMessage(gameStartMessage);
         }
 
         //Handing players their initial cards
@@ -64,6 +67,23 @@ public class Game implements Runnable {
         }
 
         //TODO: Recalculate ratings
+    }
+
+    private byte[] makeGameStartMessage() {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.START_GAME_TYPE);
+            out.writeInt(roundsNumber);
+            out.writeInt(playersNumber);
+            for (Player p: players) {
+                out.writeUTF(p.getName());
+            }
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return byteOS.toByteArray();
     }
 
     public void addMessage(ChoiceMessage message) {
