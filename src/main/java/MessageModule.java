@@ -56,7 +56,10 @@ public class MessageModule {
             return !connectionError;
         }
 
-        public void setPlayer(Player newPlayer) { player = newPlayer; }
+        public void setPlayer(Player newPlayer) {
+            player = newPlayer;
+            player.setClientThread(this);
+        }
 
         @Override
         public void run() {
@@ -113,7 +116,7 @@ public class MessageModule {
                     }
                     return;
                 }
-                Message newMessage = new Message(typeMessage);
+                Message newMessage = new Message(this, typeMessage);
                 newMessage.readMessage(in);
             }
         }

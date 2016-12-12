@@ -1,11 +1,10 @@
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class Main {
     public static ArrayList<Long> DEFAULT_CARD_SETS[] = new ArrayList[1];
 
-    static {
+    public static void main(String[] args) throws IOException {
         DEFAULT_CARD_SETS[0] = new ArrayList<>();
         DEFAULT_CARD_SETS[0].add(1L);
         DEFAULT_CARD_SETS[0].add(2L);
@@ -15,9 +14,6 @@ public class Main {
         DEFAULT_CARD_SETS[0].add(6L);
         DEFAULT_CARD_SETS[0].add(7L);
         DEFAULT_CARD_SETS[0].add(8L);
-    }
-
-    public static void main(String[] args) throws IOException {
 
         MessageModule.start();
         Object waitingObject = new Object();

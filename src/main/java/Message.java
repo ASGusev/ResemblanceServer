@@ -211,10 +211,12 @@ public class Message {
                 return;
             }
             client.setPlayer(PlayersDB.getPlayer(nickname, hashPassword));
+            System.out.println("Player " + client.getPlayer().getName()
+                    + " logged in.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        sendRegisterMessage(successfulLogin);
+        sendLoginMessage(successfulLogin);
     }
 
 

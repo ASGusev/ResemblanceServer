@@ -7,20 +7,20 @@ public class Game implements Runnable {
     private static final long PERIOD = 3000;
     private static final long CHOICE_WAIT_TIME = 60 * 1000;
     private static final long VOTE_WAIT_TIME = 60 * 1000;
-    private static final int INITIAL_CARDS_NUMBER = 6;
+    private static final int INITIAL_CARDS_NUMBER = 2;
 
     private int playersNumber = 0;
     private ArrayList<Player> players = null;
     private ArrayDeque<Long> deck = null;
-    private int[] scores = new int[playersNumber];
-    private int roundsNumber;
+    private int[] scores = null;
+    private int roundsNumber = 0;
     private final ArrayDeque<ChoiceMessage> messages = new ArrayDeque<>();
     private final Date clock = new Date();
     int leader = 0;
 
     private Association association = null;
-    private ArrayList<Long> choices = new ArrayList<Long>(playersNumber);
-    private long votes[] = new long[playersNumber];
+    private long[] choices = null;
+    private long[] votes = null;
 
     Game(ArrayList<Player> newPlayers, ArrayList<Long> cards, int newRoundsNumber) {
         playersNumber = newPlayers.size();
@@ -30,6 +30,9 @@ public class Game implements Runnable {
         Collections.shuffle(cards);
 
         deck = new ArrayDeque<Long>(cards);
+        choices = new long[playersNumber];
+        scores = new int[playersNumber];
+        votes = new long[playersNumber];
     }
 
     public void run() {
@@ -48,10 +51,15 @@ public class Game implements Runnable {
 
         //Playing game, round-by-round
         for (int round = 0; round < roundsNumber; round++) {
+            System.out.println("Round.");
             askLeader();
+            System.out.println("Lead.");
             playChoice();
+            System.out.println("Chosen.");
             playVote();
+            System.out.println("Voted.");
             countScores();
+            System.out.println("Scored.");
             leader = (leader + 1) % playersNumber;
         }
 
@@ -129,7 +137,7 @@ public class Game implements Runnable {
                 }
             }
         }
-        choices.set(leader, association.getCard());
+        choices[leader] = association.getCard();
     }
 
     private void playChoice() {
@@ -153,7 +161,7 @@ public class Game implements Runnable {
 
                     int playerIndex = players.indexOf(message.getPlayer());
 
-                    choices.set(playerIndex, message.getCard());
+                    choices[playerIndex] = message.getCard();
                     receivedChoices++;
                 }
             }
@@ -164,13 +172,14 @@ public class Game implements Runnable {
     private void playVote() {
         for (int i = 0; i < playersNumber; i++) {
             if (i != leader) {
-                players.get(i).askForVote(choices);
+                players.get(i).askForVote(association.getForm(), choices);
             }
         }
 
         long startTime = clock.getTime();
         int receivedVoices = 0;
-        while (clock.getTime() < startTime + VOTE_WAIT_TIME && receivedVoices < playersNumber - 1) {
+        while (clock.getTime() < startTime + VOTE_WAIT_TIME &&
+                receivedVoices < playersNumber - 1) {
             try {
                 Thread.sleep(PERIOD);
             } catch (InterruptedException e) {}
@@ -182,6 +191,7 @@ public class Game implements Runnable {
                     int playerIndex = players.indexOf(message.getPlayer());
 
                     votes[playerIndex] = message.getCard();
+                    receivedVoices++;
                 }
             }
         }
@@ -216,7 +226,11 @@ public class Game implements Runnable {
                     if (votes[i] == association.getCard()) {
                         scores[i] += 3;
                     } else {
-                        scores[choices.indexOf(votes[i])] += 1;
+                        int voteIndex = 0;
+                        while (choices[voteIndex] != votes[i]) {
+                            voteIndex++;
+                        }
+                        scores[voteIndex] += 1;
                     }
                 }
             }

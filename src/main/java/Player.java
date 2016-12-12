@@ -95,13 +95,14 @@ public class Player {
         messageThread.sendMessage(byteOS.toByteArray());
     };
 
-    public void askForVote(ArrayList<Long> cards) {
-        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+    public void askForVote(String form, long[] cards) {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(500);
         DataOutputStream out = new DataOutputStream(byteOS);
         try {
             out.writeInt(Message.VOTE_REQUEST_TYPE);
-            out.writeInt(cards.size());
-            for (Long card: cards) {
+            out.writeUTF(form);
+            out.writeInt(cards.length);
+            for (long card: cards) {
                 out.writeLong(card);
             }
             out.flush();
