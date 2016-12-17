@@ -3,6 +3,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.function.Consumer;
 
 public class MessageModule {
     private final static int maxCntToReconnect = 10;
@@ -160,6 +161,13 @@ public class MessageModule {
                 }
             };
             curThread.start();
+        }
+
+        public void sendWritten(Consumer<DataOutputStream> writer) {
+            ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+            DataOutputStream out = new DataOutputStream(byteOS);
+            writer.accept(out);
+            sendMessage(byteOS.toByteArray());
         }
     }
 }

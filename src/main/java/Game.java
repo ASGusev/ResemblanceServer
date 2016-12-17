@@ -2,7 +2,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Game implements Runnable {
     private static final long PERIOD = 3000;
@@ -54,15 +53,15 @@ public class Game implements Runnable {
 
         //Playing game, round-by-round
         for (int round = 0; round < roundsNumber; round++) {
-            System.out.println("Round.");
+            //System.out.println("Round.");
             askLeader();
-            System.out.println("Lead.");
+            //System.out.println("Lead.");
             playChoice();
-            System.out.println("Chosen.");
+            //System.out.println("Chosen.");
             playVote();
-            System.out.println("Voted.");
+            //System.out.println("Voted.");
             countScores();
-            System.out.println("Scored.");
+            //System.out.println("Scored.");
             leader = (leader + 1) % playersNumber;
         }
 
@@ -222,7 +221,7 @@ public class Game implements Runnable {
         //Sending all the players the leader's association
         for (int i = 0; i < playersNumber; i++) {
             if (i != leader) {
-                players.get(i).sendLeadersAssociation(association.getCard());
+                players.get(i).sendRoundEndMessage(association.getCard(), scores);
             }
         }
 

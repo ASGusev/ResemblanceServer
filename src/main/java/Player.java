@@ -1,7 +1,6 @@
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class Player {
     public static final int DEFAULT_RATING = 500;
@@ -55,103 +54,81 @@ public class Player {
     }
 
     public void sendCard(Long card) {
-        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
-        DataOutputStream out = new DataOutputStream(byteOS);
-        try {
-            out.writeInt(Message.SEND_CARD_TYPE);
-            out.writeLong(card);
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        messageThread.sendMessage(byteOS.toByteArray());
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.SEND_CARD_TYPE);
+                stream.writeLong(card);
+                stream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public void askForAssociation() {
-        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
-        DataOutputStream out = new DataOutputStream(byteOS);
-        try {
-            out.writeInt(Message.LEAD_REQUEST_TYPE);
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        messageThread.sendMessage(byteOS.toByteArray());
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.LEAD_REQUEST_TYPE);
+                stream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     };
 
     public void askForCard(String form) {
-        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
-        DataOutputStream out = new DataOutputStream(byteOS);
-        try {
-            out.writeInt(Message.CHOICE_REQUEST_TYPE);
-            out.writeUTF(form);
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        messageThread.sendMessage(byteOS.toByteArray());
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.CHOICE_REQUEST_TYPE);
+                stream.writeUTF(form);
+                stream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     };
 
     public void askForVote(String form, long[] cards) {
-        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(500);
-        DataOutputStream out = new DataOutputStream(byteOS);
-        try {
-            out.writeInt(Message.VOTE_REQUEST_TYPE);
-            out.writeUTF(form);
-            out.writeInt(cards.length);
-            for (long card: cards) {
-                out.writeLong(card);
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.VOTE_REQUEST_TYPE);
+                stream.writeUTF(form);
+                stream.writeInt(cards.length);
+                for (long card: cards) {
+                    stream.writeLong(card);
+                }
+                stream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        messageThread.sendMessage(byteOS.toByteArray());
+        });
     }
 
-    public void sendGameStart() {
-        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
-        DataOutputStream out = new DataOutputStream(byteOS);
-        try {
-            out.writeInt(Message.START_GAME_TYPE);
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        messageThread.sendMessage(byteOS.toByteArray());
-    };
-
-    public void sendLeadersAssociation(long association) {
-        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
-        DataOutputStream out = new DataOutputStream(byteOS);
-        try {
-            out.writeInt(Message.LEADERS_ASSOCIATION_TYPE);
-            out.writeLong(association);
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        messageThread.sendMessage(byteOS.toByteArray());
+    public void sendRoundEndMessage(long association, int[] scores) {
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.ROUND_END_TYPE);
+                stream.writeLong(association);
+                stream.writeInt(scores.length);
+                for (int score: scores) {
+                    stream.writeInt(score);
+                }
+                stream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public void sendRating() {
-        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
-        DataOutputStream out = new DataOutputStream(byteOS);
-        try {
-            out.writeInt(Message.RATING_TYPE);
-            out.writeInt(rating);
-            out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        messageThread.sendMessage(byteOS.toByteArray());
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.RATING_TYPE);
+                stream.writeInt(rating);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public void sendMessage(byte[] message) {

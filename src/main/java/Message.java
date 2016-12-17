@@ -17,7 +17,7 @@ public class Message {
     final public static int CHOICE_TYPE = 10;
     final public static int VOTE_REQUEST_TYPE = 11;
     final public static int VOTE_TYPE = 12;
-    final public static int LEADERS_ASSOCIATION_TYPE = 13;
+    final public static int ROUND_END_TYPE = 13;
     final public static int RATING_TYPE = 14;
 
     MessageModule.ClientThread client;
@@ -157,36 +157,36 @@ public class Message {
     }
 
     private void applyRegister(String nickname, String hashPassword) {
-        System.out.println("1");
+        //System.out.println("1");
         final int networkError = -1;
         final int successfulRegistration = 0;
         final int nicknameError = 1;
 
-        System.out.println("a");
+        //System.out.println("a");
         if (nickname == null || hashPassword == null) {
             sendRegisterMessage(networkError);
             return;
         }
 
-        System.out.println("b");
+        //System.out.println("b");
         try {
             if (PlayersDB.exists(nickname)) {
                 sendRegisterMessage(nicknameError);
-                System.out.println("c");
+                //System.out.println("c");
                 return;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println("d");
+        //System.out.println("d");
         try {
             PlayersDB.register(nickname, hashPassword);
-            System.out.println("e");
+            //System.out.println("e");
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        System.out.println("f");
+        //System.out.println("f");
         sendRegisterMessage(successfulRegistration);
     }
 
@@ -217,6 +217,7 @@ public class Message {
             e.printStackTrace();
         }
         sendLoginMessage(successfulLogin);
+        client.getPlayer().sendRating();
     }
 
 
