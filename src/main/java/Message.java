@@ -1,7 +1,6 @@
 import java.io.*;
-import java.net.Socket;
 import java.sql.SQLException;
-import java.util.stream.Stream;
+import java.util.ArrayList;
 
 public class Message {
     final public static int TEST_TYPE = 0;
@@ -19,6 +18,12 @@ public class Message {
     final public static int VOTE_TYPE = 12;
     final public static int ROUND_END_TYPE = 13;
     final public static int RATING_TYPE = 14;
+    final public static int CREATE_FRIEND_GAME_TYPE = 15;
+    final public static int JOIN_FRIEND_GAME_TYPE = 16;
+    final public static int NEW_PLAYER_TYPE = 17;
+    final public static int REMOVE_PLAYER_TYPE = 18;
+    final public static int CANCEL_GAME_TYPE = 19;
+    final public static int START_FRIEND_GAME_TYPE = 20;
 
     MessageModule.ClientThread client;
     private int type = 0;
@@ -69,6 +74,15 @@ public class Message {
                 break;
             case VOTE_TYPE:
                 readVoteMessage(in);
+                break;
+            case CREATE_FRIEND_GAME_TYPE:
+                readCreateGameMessage(in);
+                break;
+            case JOIN_FRIEND_GAME_TYPE:
+                readJoinFriendGameMessage(in);
+                break;
+            case START_FRIEND_GAME_TYPE:
+                readStartFriendGameMessage(in);
                 break;
         }
     }
@@ -148,6 +162,36 @@ public class Message {
             client.getPlayer().getGame().addMessage(new
                     Game.ChoiceMessage(client.getPlayer(), card));
         } catch (IOException e) {}
+    }
+
+    private void readCreateGameMessage(DataInputStream stream) {
+        try {
+            int roundsNumber = stream.readInt();
+            int setSize = stream.readInt();
+            ArrayList <Long> cards = new ArrayList<Long>();
+            for (int i = 0; i < setSize; i++) {
+                cards.add((long)stream.readInt());
+            }
+            FriendsGameCreator.addGame(client.getPlayer(), roundsNumber, cards);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readJoinFriendGameMessage(DataInputStream stream) {
+        try {
+            String gameCreatorName = stream.readUTF();
+            FriendsGameCreator.addPlayer(gameCreatorName, client.getPlayer());
+
+            FriendsGameCreator.getGameCreator(gameCreatorName).
+                    sendNewFriendGamePlayer(client.getPlayer().getName());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readStartFriendGameMessage(DataInputStream stream) {
+        FriendsGameCreator.startGame(client.getPlayer().getName());
     }
 
     //-----------------------------------------------------------------------

@@ -131,6 +131,18 @@ public class Player {
         });
     }
 
+    public void sendNewFriendGamePlayer(String name) {
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.NEW_PLAYER_TYPE);
+                stream.writeUTF(name);
+                stream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     public void sendMessage(byte[] message) {
         messageThread.sendMessage(message);
     }

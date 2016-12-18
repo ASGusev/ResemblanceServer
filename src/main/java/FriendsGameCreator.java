@@ -37,4 +37,8 @@ public class FriendsGameCreator {
     public static void removeGame(String name) {
         preparingGames.remove(name);
     }
+
+    public static Player getGameCreator(String name) {
+        return preparingGames.get(name).players.get(0);
+    }
 }
