@@ -63,6 +63,13 @@ public class Game implements Runnable {
             countScores();
             //System.out.println("Scored.");
             leader = (leader + 1) % playersNumber;
+
+            if (deck.size() >= playersNumber) {
+                for (Player p: players) {
+                    p.sendCard(deck.getLast());
+                    deck.removeLast();
+                }
+            }
         }
 
         //TODO: Recalculate ratings
@@ -214,17 +221,10 @@ public class Game implements Runnable {
                 }
             }
         }
-        //TODO: we still need to do something with disconnected players
+        //TODO: again, do something with disconnected players
     }
 
     private void countScores() {
-        //Sending all the players the leader's association
-        for (int i = 0; i < playersNumber; i++) {
-            if (i != leader) {
-                players.get(i).sendRoundEndMessage(association.getCard(), scores);
-            }
-        }
-
         //Updating scores
         int guessed = 0;
         for (int i = 0; i < playersNumber; i++) {
@@ -253,6 +253,11 @@ public class Game implements Runnable {
                     }
                 }
             }
+        }
+
+        //Sending all the players the leader's association
+        for (int i = 0; i < playersNumber; i++) {
+            players.get(i).sendRoundEndMessage(association.getCard(), scores);
         }
     }
 }
