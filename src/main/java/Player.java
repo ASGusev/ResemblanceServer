@@ -1,5 +1,3 @@
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 public class Player {
@@ -27,6 +25,11 @@ public class Player {
     @Override
     public boolean equals(Object other) {
         return other instanceof Player && name.equals(((Player) other).name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
     }
 
     public String getName() {
@@ -109,16 +112,18 @@ public class Player {
             try {
                 stream.writeInt(Message.RATING_TYPE);
                 stream.writeInt(rating);
+                stream.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
     }
 
-    public void sendNewFriendGamePlayer(String name) {
+    public void sendFriendPlayerMessage(boolean joined, String name) {
         messageThread.sendWritten(stream -> {
             try {
-                stream.writeInt(Message.NEW_PLAYER_TYPE);
+                stream.writeInt(Message.FRIEND_GAME_PLAYER_TYPE);
+                stream.writeBoolean(joined);
                 stream.writeUTF(name);
                 stream.flush();
             } catch (IOException e) {
@@ -131,6 +136,7 @@ public class Player {
         messageThread.sendWritten(stream -> {
             try {
                 stream.writeInt(Message.GAME_CANCELED_TYPE);
+                stream.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }

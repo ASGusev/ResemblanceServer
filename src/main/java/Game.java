@@ -251,7 +251,6 @@ public class Game implements Runnable {
                 }
             }
         }
-        //TODO: do something with disconnected players
     }
 
     private void playVote() {
@@ -280,7 +279,6 @@ public class Game implements Runnable {
                 }
             }
         }
-        //TODO: again, do something with disconnected players
     }
 
     private void countScores() {

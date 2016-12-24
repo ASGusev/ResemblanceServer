@@ -20,12 +20,13 @@ public class Message {
     final public static int RATING_TYPE = 14;
     final public static int CREATE_FRIEND_GAME_TYPE = 15;
     final public static int JOIN_FRIEND_GAME_TYPE = 16;
-    final public static int NEW_PLAYER_TYPE = 17;
+    final public static int FRIEND_GAME_PLAYER_TYPE = 17;
     final public static int REMOVE_PLAYER_TYPE = 18;
     final public static int CANCEL_FRIEND_GAME_TYPE = 19;
     final public static int START_FRIEND_GAME_TYPE = 20;
     final public static int GAME_FINISH_TYPE = 21;
     final public static int GAME_CANCELED_TYPE = 22;
+    final public static int QUIT_FIEND_GAME_TYPE = 23;
 
     MessageModule.ClientThread client;
     private int type = 0;
@@ -90,7 +91,10 @@ public class Message {
                 readCancelFriendGameMessage();
                 break;
             case REMOVE_PLAYER_TYPE:
-                readRemoveFriendGamePlayer(in);
+                readRemoveFriendGamePlayerMessage(in);
+                break;
+            case QUIT_FIEND_GAME_TYPE:
+                readQuitFriendGameMessage();
                 break;
         }
     }
@@ -193,7 +197,7 @@ public class Message {
                 FriendsGameCreator.addPlayer(gameCreatorName, client.getPlayer());
 
                 FriendsGameCreator.getGameCreator(gameCreatorName).
-                        sendNewFriendGamePlayer(client.getPlayer().getName());
+                        sendFriendPlayerMessage(true, client.getPlayer().getName());
             } else {
                 client.getPlayer().sendGameCancelledMessage();
             }
@@ -210,13 +214,20 @@ public class Message {
         FriendsGameCreator.removeGame(client.getPlayer().getName());
     }
 
-    private void readRemoveFriendGamePlayer(DataInputStream stream) {
+    private void readRemoveFriendGamePlayerMessage(DataInputStream stream) {
         try {
             String playerName = stream.readUTF();
-            FriendsGameCreator.removePlayer(client.getPlayer().getName(), playerName);
+            FriendsGameCreator.removePlayer(playerName);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void readQuitFriendGameMessage() {
+        FriendsGameCreator.getGameCreator(client.getPlayer().getName())
+                          .sendFriendPlayerMessage(false,
+                                                   client.getPlayer().getName());
+        FriendsGameCreator.removePlayer(client.getPlayer().getName());
     }
 
     //-----------------------------------------------------------------------
