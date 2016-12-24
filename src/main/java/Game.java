@@ -14,9 +14,9 @@ public class Game implements Runnable {
     private ArrayDeque<Long> deck = null;
     private int[] scores = null;
     private int roundsNumber = 0;
-    private final ArrayDeque<ChoiceMessage> messages = new ArrayDeque<>();
+    private final ArrayDeque<ChoiceMessage> choiceMessages = new ArrayDeque<>();
     private final Date clock = new Date();
-    int leader = 0;
+    private int leader = 0;
 
     private Association association = null;
     private long[] choices = null;
@@ -38,32 +38,33 @@ public class Game implements Runnable {
     public void run() {
         byte[] gameStartMessage = makeGameStartMessage();
 
-        for(Player p: players) {
-            p.setGame(this);
-            p.sendMessage(gameStartMessage);
+        for(Player player: players) {
+            player.setGame(this);
+            player.sendMessage(gameStartMessage);
         }
 
         //Handing players their initial cards
         for (int i = 0; i < INITIAL_CARDS_NUMBER; i++) {
-            for (Player p: players) {
-                p.sendCard(deck.getLast());
+            for (Player player: players) {
+                player.sendCard(deck.getLast());
                 deck.removeLast();
             }
         }
 
         //Playing game, round-by-round
         for (int round = 0; round < roundsNumber; round++) {
-            //System.out.println("Round.");
             askLeader();
-            //System.out.println("Lead.");
             playChoice();
-            //System.out.println("Chosen.");
             playVote();
-            //System.out.println("Voted.");
             countScores();
-            //System.out.println("Scored.");
             leader = (leader + 1) % playersNumber;
 
+            //Sending all the players the leader's association
+            if (round < roundsNumber - 1) {
+                broadcastRoundEndMessage();
+            }
+
+            //Sending new cards if possible
             if (deck.size() >= playersNumber) {
                 for (Player p: players) {
                     p.sendCard(deck.getLast());
@@ -72,7 +73,20 @@ public class Game implements Runnable {
             }
         }
 
+        int[] oldRatings = new int[playersNumber];
+        for (int i = 0; i < playersNumber; i++) {
+            oldRatings[i] = players.get(i).getRating();
+        }
         //TODO: Recalculate ratings
+        int[] newRatings = new int[playersNumber];
+        for (int i = 0; i < playersNumber; i++) {
+            newRatings[i] = players.get(i).getRating();
+        }
+
+        byte[] gameFinishMessage = makeGameFinishMessage(oldRatings, newRatings);
+        for (Player player: players) {
+            player.sendMessage(gameFinishMessage);
+        }
     }
 
     private byte[] makeGameStartMessage() {
@@ -92,9 +106,53 @@ public class Game implements Runnable {
         return byteOS.toByteArray();
     }
 
-    public void addMessage(ChoiceMessage message) {
-        synchronized (messages) {
-            messages.addLast(message);
+    private byte[] makeGameFinishMessage(int[] oldRatings, int[] newRatings) {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.GAME_FINISH_TYPE);
+            out.writeLong(association.getCard());
+            out.writeInt(playersNumber);
+            for (int score: scores) {
+                out.writeInt(score);
+            }
+            for (int rating: oldRatings) {
+                out.writeInt(rating);
+            }
+            for (int rating: newRatings) {
+                out.writeInt(rating);
+            }
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return byteOS.toByteArray();
+    }
+
+    private void broadcastRoundEndMessage() {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.ROUND_END_TYPE);
+            out.writeLong(association.getCard());
+            out.writeInt(scores.length);
+            for (int score: scores) {
+                out.writeInt(score);
+            }
+            out.flush();
+
+            byte[] message = byteOS.toByteArray();
+            for (Player player: players) {
+                player.sendMessage(message);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addChoiceMessage(ChoiceMessage message) {
+        synchronized (choiceMessages) {
+            choiceMessages.addLast(message);
         }
     }
 
@@ -152,11 +210,11 @@ public class Game implements Runnable {
                 Thread.sleep(PERIOD);
             } catch (InterruptedException e) {
             } finally {
-                synchronized (messages) {
-                    if (!messages.isEmpty()) {
+                synchronized (choiceMessages) {
+                    if (!choiceMessages.isEmpty()) {
                         received = true;
-                        ChoiceMessage message = messages.getLast();
-                        messages.removeLast();
+                        ChoiceMessage message = choiceMessages.getLast();
+                        choiceMessages.removeLast();
                         association = new Association(message.getCard(),
                                 message.getAssociation());
                     }
@@ -180,10 +238,10 @@ public class Game implements Runnable {
             try {
                 Thread.sleep(PERIOD);
             } catch (InterruptedException e){}
-            synchronized (messages) {
-                while (!messages.isEmpty()) {
-                    ChoiceMessage message = messages.getFirst();
-                    messages.removeFirst();
+            synchronized (choiceMessages) {
+                while (!choiceMessages.isEmpty()) {
+                    ChoiceMessage message = choiceMessages.getFirst();
+                    choiceMessages.removeFirst();
 
                     int playerIndex = players.indexOf(message.getPlayer());
 
@@ -209,10 +267,10 @@ public class Game implements Runnable {
             try {
                 Thread.sleep(PERIOD);
             } catch (InterruptedException e) {}
-            synchronized (messages) {
-                while (!messages.isEmpty()) {
-                    ChoiceMessage message = messages.getFirst();
-                    messages.removeFirst();
+            synchronized (choiceMessages) {
+                while (!choiceMessages.isEmpty()) {
+                    ChoiceMessage message = choiceMessages.getFirst();
+                    choiceMessages.removeFirst();
 
                     int playerIndex = players.indexOf(message.getPlayer());
 
@@ -253,11 +311,6 @@ public class Game implements Runnable {
                     }
                 }
             }
-        }
-
-        //Sending all the players the leader's association
-        for (int i = 0; i < playersNumber; i++) {
-            players.get(i).sendRoundEndMessage(association.getCard(), scores);
         }
     }
 }

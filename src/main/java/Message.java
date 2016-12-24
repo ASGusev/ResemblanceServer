@@ -24,6 +24,7 @@ public class Message {
     final public static int REMOVE_PLAYER_TYPE = 18;
     final public static int CANCEL_GAME_TYPE = 19;
     final public static int START_FRIEND_GAME_TYPE = 20;
+    final public static int GAME_FINISH_TYPE = 21;
 
     MessageModule.ClientThread client;
     private int type = 0;
@@ -141,7 +142,7 @@ public class Message {
         try {
             card = stream.readLong();
             association = stream.readUTF();
-            client.getPlayer().getGame().addMessage(new
+            client.getPlayer().getGame().addChoiceMessage(new
                     Game.ChoiceMessage(client.getPlayer(), card, association));
         } catch (IOException e) {}
     }
@@ -150,7 +151,7 @@ public class Message {
         long card;
         try {
             card = stream.readLong();
-            client.getPlayer().getGame().addMessage(new
+            client.getPlayer().getGame().addChoiceMessage(new
                     Game.ChoiceMessage(client.getPlayer(), card));
         } catch (IOException e) {}
     }
@@ -159,7 +160,7 @@ public class Message {
         long card;
         try {
             card = stream.readLong();
-            client.getPlayer().getGame().addMessage(new
+            client.getPlayer().getGame().addChoiceMessage(new
                     Game.ChoiceMessage(client.getPlayer(), card));
         } catch (IOException e) {}
     }

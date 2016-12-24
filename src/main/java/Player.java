@@ -104,6 +104,7 @@ public class Player {
         });
     }
 
+    /*
     public void sendRoundEndMessage(long association, int[] scores) {
         messageThread.sendWritten(stream -> {
             try {
@@ -119,7 +120,7 @@ public class Player {
             }
         });
     }
-
+    */
     public void sendRating() {
         messageThread.sendWritten(stream -> {
             try {
