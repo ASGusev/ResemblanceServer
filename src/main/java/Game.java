@@ -73,6 +73,7 @@ public class Game implements Runnable {
             }
         }
 
+        //Preparing a message with game results
         int[] oldRatings = new int[playersNumber];
         for (int i = 0; i < playersNumber; i++) {
             oldRatings[i] = players.get(i).getRating();

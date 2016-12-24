@@ -22,9 +22,10 @@ public class Message {
     final public static int JOIN_FRIEND_GAME_TYPE = 16;
     final public static int NEW_PLAYER_TYPE = 17;
     final public static int REMOVE_PLAYER_TYPE = 18;
-    final public static int CANCEL_GAME_TYPE = 19;
+    final public static int CANCEL_FRIEND_GAME_TYPE = 19;
     final public static int START_FRIEND_GAME_TYPE = 20;
     final public static int GAME_FINISH_TYPE = 21;
+    final public static int GAME_CANCELED_TYPE = 22;
 
     MessageModule.ClientThread client;
     private int type = 0;
@@ -62,10 +63,10 @@ public class Message {
                 readLoginMessage(in);
                 break;
             case JOIN_RANDOM_GAME_TYPE:
-                readJoinRandomGameMessage(in);
+                readJoinRandomGameMessage();
                 break;
             case QUIT_RANDOM_GAME_TYPE:
-                readQuitRandomGameMessage(in);
+                readQuitRandomGameMessage();
                 break;
             case LEAD_ASSOCIATION_TYPE:
                 readLeadAssociationMessage(in);
@@ -83,7 +84,13 @@ public class Message {
                 readJoinFriendGameMessage(in);
                 break;
             case START_FRIEND_GAME_TYPE:
-                readStartFriendGameMessage(in);
+                readStartFriendGameMessage();
+                break;
+            case CANCEL_FRIEND_GAME_TYPE:
+                readCancelFriendGameMessage();
+                break;
+            case REMOVE_PLAYER_TYPE:
+                readRemoveFriendGamePlayer(in);
                 break;
         }
     }
@@ -128,11 +135,11 @@ public class Message {
         }
     }
 
-    private void readJoinRandomGameMessage(DataInputStream stream) {
+    private void readJoinRandomGameMessage() {
         RandomGameCreator.addPlayer(client.getPlayer());
     }
 
-    private void readQuitRandomGameMessage(DataInputStream stream) {
+    private void readQuitRandomGameMessage() {
         RandomGameCreator.removePlayer(client.getPlayer());
     }
 
@@ -182,17 +189,34 @@ public class Message {
     private void readJoinFriendGameMessage(DataInputStream stream) {
         try {
             String gameCreatorName = stream.readUTF();
-            FriendsGameCreator.addPlayer(gameCreatorName, client.getPlayer());
+            if (FriendsGameCreator.gameExists(gameCreatorName)) {
+                FriendsGameCreator.addPlayer(gameCreatorName, client.getPlayer());
 
-            FriendsGameCreator.getGameCreator(gameCreatorName).
-                    sendNewFriendGamePlayer(client.getPlayer().getName());
+                FriendsGameCreator.getGameCreator(gameCreatorName).
+                        sendNewFriendGamePlayer(client.getPlayer().getName());
+            } else {
+                client.getPlayer().sendGameCancelledMessage();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void readStartFriendGameMessage(DataInputStream stream) {
+    private void readStartFriendGameMessage() {
         FriendsGameCreator.startGame(client.getPlayer().getName());
+    }
+
+    private void readCancelFriendGameMessage() {
+        FriendsGameCreator.removeGame(client.getPlayer().getName());
+    }
+
+    private void readRemoveFriendGamePlayer(DataInputStream stream) {
+        try {
+            String playerName = stream.readUTF();
+            FriendsGameCreator.removePlayer(client.getPlayer().getName(), playerName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     //-----------------------------------------------------------------------

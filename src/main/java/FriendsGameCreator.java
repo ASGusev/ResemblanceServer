@@ -35,10 +35,30 @@ public class FriendsGameCreator {
     }
 
     public static void removeGame(String name) {
+        FriendsGameCreator creator = preparingGames.get(name);
+        //Tell all the players except the leader that the game is cancelled
+        for (int i = 1; i < creator.players.size(); i++) {
+            creator.players.get(i).sendGameCancelledMessage();
+        }
         preparingGames.remove(name);
     }
 
     public static Player getGameCreator(String name) {
         return preparingGames.get(name).players.get(0);
+    }
+
+    public static boolean gameExists(String creatorName) {
+        return preparingGames.containsKey(creatorName);
+    }
+
+    public static void removePlayer(String creatorName, String playerName) {
+        FriendsGameCreator gameCreator = preparingGames.get(creatorName);
+        int playerIndex = 0;
+        while (!gameCreator.players.get(playerIndex).getName().equals(playerName)) {
+            playerIndex++;
+        }
+        Player player = gameCreator.players.get(playerIndex);
+        player.sendGameCancelledMessage();
+        gameCreator.players.remove(playerIndex);
     }
 }

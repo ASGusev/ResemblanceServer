@@ -104,23 +104,6 @@ public class Player {
         });
     }
 
-    /*
-    public void sendRoundEndMessage(long association, int[] scores) {
-        messageThread.sendWritten(stream -> {
-            try {
-                stream.writeInt(Message.ROUND_END_TYPE);
-                stream.writeLong(association);
-                stream.writeInt(scores.length);
-                for (int score: scores) {
-                    stream.writeInt(score);
-                }
-                stream.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-    */
     public void sendRating() {
         messageThread.sendWritten(stream -> {
             try {
@@ -138,6 +121,16 @@ public class Player {
                 stream.writeInt(Message.NEW_PLAYER_TYPE);
                 stream.writeUTF(name);
                 stream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    protected void sendGameCancelledMessage() {
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.GAME_CANCELED_TYPE);
             } catch (IOException e) {
                 e.printStackTrace();
             }
