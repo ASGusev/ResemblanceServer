@@ -15,7 +15,6 @@ public class Game implements Runnable {
     private int[] scores = null;
     private int roundsNumber = 0;
     private final ArrayDeque<ChoiceMessage> choiceMessages = new ArrayDeque<>();
-    private final Date clock = new Date();
     private int leader = 0;
 
     private Association association = null;
@@ -232,9 +231,9 @@ public class Game implements Runnable {
             }
         }
 
-        long startTime = clock.getTime();
+        long startTime = System.currentTimeMillis();
         int receivedChoices = 1;
-        while (clock.getTime() < startTime + CHOICE_WAIT_TIME &&
+        while (System.currentTimeMillis() < startTime + CHOICE_WAIT_TIME &&
                 receivedChoices < playersNumber) {
             try {
                 Thread.sleep(PERIOD);
@@ -260,9 +259,9 @@ public class Game implements Runnable {
             }
         }
 
-        long startTime = clock.getTime();
+        long startTime = System.currentTimeMillis();
         int receivedVoices = 0;
-        while (clock.getTime() < startTime + VOTE_WAIT_TIME &&
+        while (System.currentTimeMillis() < startTime + VOTE_WAIT_TIME &&
                 receivedVoices < playersNumber - 1) {
             try {
                 Thread.sleep(PERIOD);

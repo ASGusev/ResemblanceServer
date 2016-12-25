@@ -2,3 +2,4 @@
 /build
 /.gradle
 /sqlite3.exe
+/players.db
