@@ -27,6 +27,8 @@ public class Message {
     final public static int GAME_FINISH_TYPE = 21;
     final public static int GAME_CANCELED_TYPE = 22;
     final public static int QUIT_FIEND_GAME_TYPE = 23;
+    final public static int PASSWORD_CHANGE_REQUEST_TYPE = 24;
+    final public static int PASSWORD_CHANGE_RESPONSE_TYPE = 25;
 
     MessageModule.ClientThread client;
     private int type = 0;
@@ -95,6 +97,9 @@ public class Message {
                 break;
             case QUIT_FIEND_GAME_TYPE:
                 readQuitFriendGameMessage();
+                break;
+            case PASSWORD_CHANGE_REQUEST_TYPE:
+                readPasswordChangeRequestMessage(in);
                 break;
         }
     }
@@ -230,6 +235,25 @@ public class Message {
         FriendsGameCreator.removePlayer(client.getPlayer().getName());
     }
 
+    private void readPasswordChangeRequestMessage(DataInputStream stream) {
+        final int PASSWORD_CHANGE_SUCCESS = 1;
+        final int PASSWORD_CHANGE_FAILURE = 2;
+        try {
+            String oldPassword = stream.readUTF();
+            String newPassword = stream.readUTF();
+            if (PlayersDB.checkPassword(client.getPlayer().getName(), oldPassword)) {
+                PlayersDB.changePassword(client.getPlayer().getName(),
+                        oldPassword, newPassword);
+                client.getPlayer().sendPasswordChangeResponseMessage(
+                        PASSWORD_CHANGE_SUCCESS);
+            } else {
+                client.getPlayer().sendPasswordChangeResponseMessage(PASSWORD_CHANGE_FAILURE);
+            }
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     //-----------------------------------------------------------------------
 
     private void applyTest(String textMessage) {
@@ -283,11 +307,11 @@ public class Message {
 
         try {
             if (!PlayersDB.exists(nickname)) {
-                sendRegisterMessage(nicknameError);
+                sendLoginMessage(nicknameError);
                 return;
             }
             if (!PlayersDB.checkPassword(nickname, hashPassword)) {
-                sendRegisterMessage(passwordError);
+                sendLoginMessage(passwordError);
                 return;
             }
             client.setPlayer(PlayersDB.getPlayer(nickname, hashPassword));

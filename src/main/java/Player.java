@@ -143,6 +143,18 @@ public class Player {
         });
     }
 
+    protected void sendPasswordChangeResponseMessage(int code) {
+        messageThread.sendWritten(stream -> {
+            try {
+                stream.writeInt(Message.PASSWORD_CHANGE_RESPONSE_TYPE);
+                stream.writeInt(code);
+                stream.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     public void sendMessage(byte[] message) {
         messageThread.sendMessage(message);
     }
