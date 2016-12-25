@@ -2,6 +2,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Game implements Runnable {
     private static final long PERIOD = 3000;
@@ -77,7 +79,9 @@ public class Game implements Runnable {
         for (int i = 0; i < playersNumber; i++) {
             oldRatings[i] = players.get(i).getRating();
         }
-        //TODO: Recalculate ratings
+
+        updateRatings();
+
         int[] newRatings = new int[playersNumber];
         for (int i = 0; i < playersNumber; i++) {
             newRatings[i] = players.get(i).getRating();
@@ -281,7 +285,6 @@ public class Game implements Runnable {
     }
 
     private void countScores() {
-        //Updating scores
         int guessed = 0;
         for (int i = 0; i < playersNumber; i++) {
             if (i != leader && votes[i] == association.getCard()) {
@@ -308,6 +311,27 @@ public class Game implements Runnable {
                         scores[voteIndex] += 1;
                     }
                 }
+            }
+        }
+    }
+
+    private void updateRatings() {
+        final double EPS = 1e-7d;
+        double averageScore = Arrays.stream(scores).
+                mapToObj(Integer::new).
+                collect(Collectors.averagingInt(a -> a));
+        double averageRating = players.stream()
+                .collect(Collectors.averagingInt(Player::getRating));
+        for (int i = 0; i < playersNumber; i++) {
+            if (scores[i] > averageScore + EPS) {
+                int curRating = players.get(i).getRating();
+                double addition = (scores[i] - averageScore) * 10;
+                if (curRating > averageRating * 1.3) {
+                    addition /= 1.5;
+                } else if (curRating < averageRating * 0.7) {
+                    addition *= 1.5;
+                }
+                players.get(i).setRating(curRating + (int)(Math.rint(addition) + EPS));
             }
         }
     }

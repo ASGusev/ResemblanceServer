@@ -1,7 +1,7 @@
 import java.io.IOException;
 
 public class Player {
-    public static final int DEFAULT_RATING = 500;
+    public static final int DEFAULT_RATING = 0;
 
     private int rating = DEFAULT_RATING;
     private String name = "";
