@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.sql.SQLException;
 
 public class Player {
     public static final int DEFAULT_RATING = 0;
@@ -41,7 +42,14 @@ public class Player {
     }
 
     public void setRating(int rating) {
-        this.rating = rating;
+        if (this.rating != rating) {
+            this.rating = rating;
+            try {
+                PlayersDB.updateRating(name, rating);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void setGame(Game game) {

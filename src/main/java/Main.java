@@ -6,14 +6,9 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         DEFAULT_CARD_SETS[0] = new ArrayList<>();
-        DEFAULT_CARD_SETS[0].add(1L);
-        DEFAULT_CARD_SETS[0].add(2L);
-        DEFAULT_CARD_SETS[0].add(3L);
-        DEFAULT_CARD_SETS[0].add(4L);
-        DEFAULT_CARD_SETS[0].add(5L);
-        DEFAULT_CARD_SETS[0].add(6L);
-        DEFAULT_CARD_SETS[0].add(7L);
-        DEFAULT_CARD_SETS[0].add(8L);
+        for (long i = 9; i < 46; i++) {
+            DEFAULT_CARD_SETS[0].add(i);
+        }
 
         MessageModule.start();
         Object waitingObject = new Object();

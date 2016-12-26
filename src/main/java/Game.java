@@ -9,7 +9,7 @@ public class Game implements Runnable {
     private static final long PERIOD = 3000;
     private static final long CHOICE_WAIT_TIME = 60 * 1000;
     private static final long VOTE_WAIT_TIME = 60 * 1000;
-    private static final int INITIAL_CARDS_NUMBER = 2;
+    private static final int INITIAL_CARDS_NUMBER = 6;
 
     private int playersNumber = 0;
     private ArrayList<Player> players = null;

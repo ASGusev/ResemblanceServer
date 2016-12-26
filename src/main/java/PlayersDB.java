@@ -36,11 +36,10 @@ public class PlayersDB {
                 oldPasswordHash + "';");
     }
 
-    public static void updateRating(String name, String passwordHash, int newRating)
+    public static void updateRating(String name, int newRating)
             throws SQLException {
         statement.execute("UPDATE players SET rating = " + newRating +
-                " WHERE nickname = '" + name + "' AND password_hash = '" +
-                passwordHash + "';");
+                " WHERE nickname = '" + name + "';");
     }
 
     public static Player getPlayer(String name, String passwordHash) throws SQLException {
