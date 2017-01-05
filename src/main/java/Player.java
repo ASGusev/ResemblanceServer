@@ -1,26 +1,20 @@
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 
 public class Player {
-    public static final int DEFAULT_RATING = 0;
-
-    private int rating = DEFAULT_RATING;
-    private String name = "";
-    private String password = null;
+    private int rating;
+    private final String name;
+    //private String password = null;
     private Game game;
     private MessageModule.ClientThread messageThread;
-
-    Player() {}
-
-    Player(String name, int rating) {
-        this.name = name;
-        this.rating = rating;
-    }
 
     Player(String name, int rating, String password) {
         this.name = name;
         this.rating = rating;
-        this.password = password;
+        //this.password = password;
     }
 
     @Override
@@ -65,7 +59,7 @@ public class Player {
     }
 
     public void sendCard(Long card) {
-        messageThread.sendWritten(stream -> {
+        sendWritten(stream -> {
             try {
                 stream.writeInt(Message.SEND_CARD_TYPE);
                 stream.writeLong(card);
@@ -77,7 +71,7 @@ public class Player {
     }
 
     public void askForAssociation() {
-        messageThread.sendWritten(stream -> {
+        sendWritten(stream -> {
             try {
                 stream.writeInt(Message.LEAD_REQUEST_TYPE);
                 stream.flush();
@@ -88,7 +82,7 @@ public class Player {
     };
 
     public void askForCard(String form) {
-        messageThread.sendWritten(stream -> {
+        sendWritten(stream -> {
             try {
                 stream.writeInt(Message.CHOICE_REQUEST_TYPE);
                 stream.writeUTF(form);
@@ -100,7 +94,7 @@ public class Player {
     };
 
     public void askForVote(String form, long[] cards) {
-        messageThread.sendWritten(stream -> {
+        sendWritten(stream -> {
             try {
                 stream.writeInt(Message.VOTE_REQUEST_TYPE);
                 stream.writeUTF(form);
@@ -116,7 +110,7 @@ public class Player {
     }
 
     public void sendRating() {
-        messageThread.sendWritten(stream -> {
+        sendWritten(stream -> {
             try {
                 stream.writeInt(Message.RATING_TYPE);
                 stream.writeInt(rating);
@@ -128,7 +122,7 @@ public class Player {
     }
 
     public void sendFriendPlayerMessage(boolean joined, String name) {
-        messageThread.sendWritten(stream -> {
+        sendWritten(stream -> {
             try {
                 stream.writeInt(Message.FRIEND_GAME_PLAYER_TYPE);
                 stream.writeBoolean(joined);
@@ -141,7 +135,7 @@ public class Player {
     }
 
     protected void sendGameCancelledMessage() {
-        messageThread.sendWritten(stream -> {
+        sendWritten(stream -> {
             try {
                 stream.writeInt(Message.GAME_CANCELED_TYPE);
                 stream.flush();
@@ -152,7 +146,7 @@ public class Player {
     }
 
     protected void sendPasswordChangeResponseMessage(int code) {
-        messageThread.sendWritten(stream -> {
+        sendWritten(stream -> {
             try {
                 stream.writeInt(Message.PASSWORD_CHANGE_RESPONSE_TYPE);
                 stream.writeInt(code);
@@ -165,5 +159,12 @@ public class Player {
 
     public void sendMessage(byte[] message) {
         messageThread.sendMessage(message);
+    }
+
+    private void sendWritten(Consumer<DataOutputStream> writer) {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        writer.accept(out);
+        messageThread.sendMessage(byteOS.toByteArray());
     }
 }

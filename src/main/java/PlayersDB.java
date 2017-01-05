@@ -1,17 +1,16 @@
 import java.sql.*;
 
 public class PlayersDB {
-    private static Connection base;
+    private static final int DEFAULT_RATING = 0;
     private static final String DBNAME = "players.db";
+
+    private static Connection base;
     private static Statement statement;
 
     static {
         try {
-            Class.forName("org.sqlite.JDBC");
             base = DriverManager.getConnection("jdbc:sqlite:" + DBNAME);
             statement = base.createStatement();
-        } catch (ClassNotFoundException e) {
-            System.out.println("Error during loading class.");
         } catch (SQLException e) {
             System.out.println("Error during connecting to database.");
         }
@@ -55,6 +54,6 @@ public class PlayersDB {
 
     public static void register(String name, String password) throws SQLException {
         statement.execute("INSERT INTO 'players' VALUES ('" + name + "', '"
-                + Player.DEFAULT_RATING + "', '" + password + "'); ");
+                + DEFAULT_RATING + "', '" + password + "'); ");
     }
 }

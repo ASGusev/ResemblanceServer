@@ -1,8 +1,8 @@
 import java.util.ArrayList;
 
 public class RandomGameCreator {
-    public static final int PLAYERS_PER_GAME = 3;
-    public static final int DEFAULT_ROUNDS_NUMBER = 2;
+    private static final int PLAYERS_PER_GAME = 3;
+    private static final int DEFAULT_ROUNDS_NUMBER = 2;
 
     private static ArrayList<Player> waitingPlayers = new ArrayList<>();
 
@@ -19,7 +19,7 @@ public class RandomGameCreator {
 
     public static void removePlayer(Player player) {
         synchronized (RandomGameCreator.class) {
-            waitingPlayers.remove(waitingPlayers.indexOf(player));
+            waitingPlayers.remove(player);
         }
     }
 }

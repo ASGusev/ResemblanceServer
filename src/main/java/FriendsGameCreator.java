@@ -6,9 +6,9 @@ public class FriendsGameCreator {
     private static final Map<String,FriendsGameCreator> gameByPlayer =
             new ConcurrentHashMap<>();
 
-    private ArrayList<Player> players;
-    private int roundsNumber;
-    private ArrayList<Long> cards;
+    private final ArrayList<Player> players;
+    private final int roundsNumber;
+    private final ArrayList<Long> cards;
 
     private FriendsGameCreator (Player creator, int roundsNumber, ArrayList<Long> cards) {
         players = new ArrayList<>();
@@ -29,7 +29,6 @@ public class FriendsGameCreator {
 
     public static void startGame(String name) {
         FriendsGameCreator gameCreator = gameByPlayer.get(name);
-
         Game game = new Game(gameCreator.players, gameCreator.cards, gameCreator.roundsNumber);
         new Thread(game).start();
         for (Player player: gameCreator.players) {

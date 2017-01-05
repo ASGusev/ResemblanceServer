@@ -6,53 +6,37 @@ public class Message {
     final public static int TEST_TYPE = 0;
     final public static int REGISTER_TYPE = 1;
     final public static int LOGIN_TYPE = 2;
-    final public static int JOIN_RANDOM_GAME_TYPE = 3;
+    private final static int JOIN_RANDOM_GAME_TYPE = 3;
     final public static int QUIT_RANDOM_GAME_TYPE = 4;
     final public static int START_GAME_TYPE = 5;
     final public static int SEND_CARD_TYPE = 6;
     final public static int LEAD_REQUEST_TYPE = 7;
-    final public static int LEAD_ASSOCIATION_TYPE = 8;
+    private final static int LEAD_ASSOCIATION_TYPE = 8;
     final public static int CHOICE_REQUEST_TYPE = 9;
-    final public static int CHOICE_TYPE = 10;
+    private final static int CHOICE_TYPE = 10;
     final public static int VOTE_REQUEST_TYPE = 11;
-    final public static int VOTE_TYPE = 12;
+    private final static int VOTE_TYPE = 12;
     final public static int ROUND_END_TYPE = 13;
     final public static int RATING_TYPE = 14;
-    final public static int CREATE_FRIEND_GAME_TYPE = 15;
-    final public static int JOIN_FRIEND_GAME_TYPE = 16;
+    private final static int CREATE_FRIEND_GAME_TYPE = 15;
+    private final static int JOIN_FRIEND_GAME_TYPE = 16;
     final public static int FRIEND_GAME_PLAYER_TYPE = 17;
-    final public static int REMOVE_PLAYER_TYPE = 18;
-    final public static int CANCEL_FRIEND_GAME_TYPE = 19;
-    final public static int START_FRIEND_GAME_TYPE = 20;
+    private final static int REMOVE_PLAYER_TYPE = 18;
+    private final static int CANCEL_FRIEND_GAME_TYPE = 19;
+    private final static int START_FRIEND_GAME_TYPE = 20;
     final public static int GAME_FINISH_TYPE = 21;
     final public static int GAME_CANCELED_TYPE = 22;
-    final public static int QUIT_FIEND_GAME_TYPE = 23;
-    final public static int PASSWORD_CHANGE_REQUEST_TYPE = 24;
+    private final static int QUIT_FIEND_GAME_TYPE = 23;
+    private final static int PASSWORD_CHANGE_REQUEST_TYPE = 24;
     final public static int PASSWORD_CHANGE_RESPONSE_TYPE = 25;
 
-    MessageModule.ClientThread client;
-    private int type = 0;
+    private final MessageModule.ClientThread client;
+    private final int type;
 
-    Message(int type) {
+    Message(MessageModule.ClientThread client, int type) {
         this.type = type;
+        this.client = client;
     }
-    Message(MessageModule.ClientThread client) { this.client = client; }
-    Message(MessageModule.ClientThread client, int type) { this.type = type; this.client = client; }
-
-    public int getType() {
-        return type;
-    }
-    public MessageModule.ClientThread getClient() {
-        return client;
-    }
-
-    public void setType(int newType) {
-        type = newType;
-    }
-    public void setClient(MessageModule.ClientThread newClient) {
-        client = newClient;
-    }
-
 
     public void readMessage(DataInputStream in) {
         switch (type) {
@@ -261,36 +245,29 @@ public class Message {
     }
 
     private void applyRegister(String nickname, String hashPassword) {
-        //System.out.println("1");
         final int networkError = -1;
         final int successfulRegistration = 0;
         final int nicknameError = 1;
 
-        //System.out.println("a");
         if (nickname == null || hashPassword == null) {
             sendRegisterMessage(networkError);
             return;
         }
 
-        //System.out.println("b");
         try {
             if (PlayersDB.exists(nickname)) {
                 sendRegisterMessage(nicknameError);
-                //System.out.println("c");
                 return;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        //System.out.println("d");
         try {
             PlayersDB.register(nickname, hashPassword);
-            //System.out.println("e");
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        //System.out.println("f");
         sendRegisterMessage(successfulRegistration);
     }
 

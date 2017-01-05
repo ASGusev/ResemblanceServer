@@ -3,7 +3,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Game implements Runnable {
     private static final long PERIOD = 3000;
@@ -11,29 +10,27 @@ public class Game implements Runnable {
     private static final long VOTE_WAIT_TIME = 60 * 1000;
     private static final int INITIAL_CARDS_NUMBER = 6;
 
-    private int playersNumber = 0;
-    private ArrayList<Player> players = null;
-    private ArrayDeque<Long> deck = null;
-    private int[] scores = null;
-    private int roundsNumber = 0;
+    private final ArrayList<Player> players;
+    private final ArrayDeque<Long> deck;
+    private final int[] scores;
+    private final int roundsNumber;
     private final ArrayDeque<ChoiceMessage> choiceMessages = new ArrayDeque<>();
     private int leader = 0;
 
     private Association association = null;
-    private long[] choices = null;
-    private long[] votes = null;
+    private final long[] choices;
+    private final long[] votes;
 
-    Game(ArrayList<Player> newPlayers, ArrayList<Long> cards, int newRoundsNumber) {
-        playersNumber = newPlayers.size();
-        players = newPlayers;
-        roundsNumber = newRoundsNumber;
+    Game(ArrayList<Player> players, List<Long> cards, int roundsNumber) {
+        this.players = players;
+        this.roundsNumber = roundsNumber;
 
         Collections.shuffle(cards);
 
         deck = new ArrayDeque<Long>(cards);
-        choices = new long[playersNumber];
-        scores = new int[playersNumber];
-        votes = new long[playersNumber];
+        choices = new long[players.size()];
+        scores = new int[players.size()];
+        votes = new long[players.size()];
     }
 
     public void run() {
@@ -58,7 +55,7 @@ public class Game implements Runnable {
             playChoice();
             playVote();
             countScores();
-            leader = (leader + 1) % playersNumber;
+            leader = (leader + 1) % players.size();
 
             //Sending all the players the leader's association
             if (round < roundsNumber - 1) {
@@ -66,7 +63,7 @@ public class Game implements Runnable {
             }
 
             //Sending new cards if possible
-            if (deck.size() >= playersNumber) {
+            if (deck.size() >= players.size()) {
                 for (Player p: players) {
                     p.sendCard(deck.getLast());
                     deck.removeLast();
@@ -75,15 +72,15 @@ public class Game implements Runnable {
         }
 
         //Preparing a message with game results
-        int[] oldRatings = new int[playersNumber];
-        for (int i = 0; i < playersNumber; i++) {
+        int[] oldRatings = new int[players.size()];
+        for (int i = 0; i < players.size(); i++) {
             oldRatings[i] = players.get(i).getRating();
         }
 
         updateRatings();
 
-        int[] newRatings = new int[playersNumber];
-        for (int i = 0; i < playersNumber; i++) {
+        int[] newRatings = new int[players.size()];
+        for (int i = 0; i < players.size(); i++) {
             newRatings[i] = players.get(i).getRating();
         }
 
@@ -99,7 +96,7 @@ public class Game implements Runnable {
         try {
             out.writeInt(Message.START_GAME_TYPE);
             out.writeInt(roundsNumber);
-            out.writeInt(playersNumber);
+            out.writeInt(players.size());
             for (Player p: players) {
                 out.writeUTF(p.getName());
             }
@@ -116,7 +113,7 @@ public class Game implements Runnable {
         try {
             out.writeInt(Message.GAME_FINISH_TYPE);
             out.writeLong(association.getCard());
-            out.writeInt(playersNumber);
+            out.writeInt(players.size());
             for (int score: scores) {
                 out.writeInt(score);
             }
@@ -229,7 +226,7 @@ public class Game implements Runnable {
     }
 
     private void playChoice() {
-        for (int i = 0; i < playersNumber; i++) {
+        for (int i = 0; i < players.size(); i++) {
             if (i != leader) {
                 players.get(i).askForCard(association.getForm());
             }
@@ -238,7 +235,7 @@ public class Game implements Runnable {
         long startTime = System.currentTimeMillis();
         int receivedChoices = 1;
         while (System.currentTimeMillis() < startTime + CHOICE_WAIT_TIME &&
-                receivedChoices < playersNumber) {
+                receivedChoices < players.size()) {
             try {
                 Thread.sleep(PERIOD);
             } catch (InterruptedException e){}
@@ -257,7 +254,7 @@ public class Game implements Runnable {
     }
 
     private void playVote() {
-        for (int i = 0; i < playersNumber; i++) {
+        for (int i = 0; i < players.size(); i++) {
             if (i != leader) {
                 players.get(i).askForVote(association.getForm(), choices);
             }
@@ -266,7 +263,7 @@ public class Game implements Runnable {
         long startTime = System.currentTimeMillis();
         int receivedVoices = 0;
         while (System.currentTimeMillis() < startTime + VOTE_WAIT_TIME &&
-                receivedVoices < playersNumber - 1) {
+                receivedVoices < players.size() - 1) {
             try {
                 Thread.sleep(PERIOD);
             } catch (InterruptedException e) {}
@@ -286,20 +283,20 @@ public class Game implements Runnable {
 
     private void countScores() {
         int guessed = 0;
-        for (int i = 0; i < playersNumber; i++) {
+        for (int i = 0; i < players.size(); i++) {
             if (i != leader && votes[i] == association.getCard()) {
                 guessed++;
             }
         }
-        if (guessed == 0 || guessed == playersNumber - 1) {
-            for (int i = 0; i < playersNumber; i++) {
+        if (guessed == 0 || guessed == players.size() - 1) {
+            for (int i = 0; i < players.size(); i++) {
                 if (i != leader && votes[i] == association.getCard()) {
                     scores[i] += 2;
                 }
             }
         } else {
             scores[leader] += 3;
-            for (int i = 0; i < playersNumber; i++) {
+            for (int i = 0; i < players.size(); i++) {
                 if (i != leader) {
                     if (votes[i] == association.getCard()) {
                         scores[i] += 3;
@@ -322,7 +319,7 @@ public class Game implements Runnable {
                 collect(Collectors.averagingInt(a -> a));
         double averageRating = players.stream()
                 .collect(Collectors.averagingInt(Player::getRating));
-        for (int i = 0; i < playersNumber; i++) {
+        for (int i = 0; i < players.size(); i++) {
             if (scores[i] > averageScore + EPS) {
                 int curRating = players.get(i).getRating();
                 double addition = (scores[i] - averageScore) * 10;
