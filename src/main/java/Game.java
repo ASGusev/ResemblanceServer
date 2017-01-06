@@ -2,24 +2,29 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 public class Game implements Runnable {
-    private static final long PERIOD = 3000;
     private static final long CHOICE_WAIT_TIME = 60 * 1000;
-    private static final long VOTE_WAIT_TIME = 60 * 1000;
     private static final int INITIAL_CARDS_NUMBER = 6;
 
     private final ArrayList<Player> players;
     private final ArrayDeque<Long> deck;
     private final int[] scores;
     private final int roundsNumber;
-    private final ArrayDeque<ChoiceMessage> choiceMessages = new ArrayDeque<>();
     private int leader = 0;
-
-    private Association association = null;
+    private long leadersCard;
+    private String leadersAssociation;
     private final long[] choices;
     private final long[] votes;
+    private final Lock choiceLock;
+    private final Condition choiceExpectation;
+    private int receivedChoices;
+    private int receivedVotes;
 
     Game(ArrayList<Player> players, List<Long> cards, int roundsNumber) {
         this.players = players;
@@ -31,6 +36,8 @@ public class Game implements Runnable {
         choices = new long[players.size()];
         scores = new int[players.size()];
         votes = new long[players.size()];
+        choiceLock = new ReentrantLock();
+        choiceExpectation = choiceLock.newCondition();
     }
 
     public void run() {
@@ -90,6 +97,43 @@ public class Game implements Runnable {
         }
     }
 
+    public void setLeadersAssociation(long card, String form) {
+        choiceLock.lock();
+        try {
+            leadersCard = card;
+            leadersAssociation = form;
+            choiceExpectation.signal();
+        } finally {
+            choiceLock.unlock();
+        }
+    }
+
+    public void setChoice(Player player, long card) {
+        choiceLock.lock();
+        try {
+            choices[players.indexOf(player)] = card;
+            receivedChoices++;
+            if (receivedChoices == players.size()){
+                choiceExpectation.signal();
+            }
+        } finally {
+            choiceLock.unlock();
+        }
+    }
+
+    public void setVote(Player player, long card) {
+        choiceLock.lock();
+        try {
+            votes[players.indexOf(player)] = card;
+            receivedVotes++;
+            if (receivedVotes == players.size() - 1) {
+                choiceExpectation.signal();
+            }
+        } finally {
+            choiceLock.unlock();
+        }
+    }
+
     private byte[] makeGameStartMessage() {
         ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
         DataOutputStream out = new DataOutputStream(byteOS);
@@ -112,7 +156,7 @@ public class Game implements Runnable {
         DataOutputStream out = new DataOutputStream(byteOS);
         try {
             out.writeInt(Message.GAME_FINISH_TYPE);
-            out.writeLong(association.getCard());
+            out.writeLong(leadersCard);
             out.writeInt(players.size());
             for (int score: scores) {
                 out.writeInt(score);
@@ -135,7 +179,7 @@ public class Game implements Runnable {
         DataOutputStream out = new DataOutputStream(byteOS);
         try {
             out.writeInt(Message.ROUND_END_TYPE);
-            out.writeLong(association.getCard());
+            out.writeLong(leadersCard);
             out.writeInt(scores.length);
             for (int score: scores) {
                 out.writeInt(score);
@@ -151,132 +195,77 @@ public class Game implements Runnable {
         }
     }
 
-    public void addChoiceMessage(ChoiceMessage message) {
-        synchronized (choiceMessages) {
-            choiceMessages.addLast(message);
-        }
-    }
-
-    public class Association {
-        private long card;
-        private String form;
-
-        Association(long newCard, String newForm) {
-            card = newCard;
-            form = newForm;
-        }
-
-        public long getCard() {
-            return card;
-        }
-
-        public String getForm() {
-            return form;
-        }
-    }
-
-    public static class ChoiceMessage {
-        private Player player;
-        private long card;
-        private String association;
-
-        ChoiceMessage(Player player, long card) {
-            this(player, card, null);
-        }
-
-        ChoiceMessage(Player player, long card, String association) {
-            this.player = player;
-            this.card = card;
-            this.association = association;
-        }
-
-        public Player getPlayer() {
-            return player;
-        }
-
-        public long getCard() {
-            return card;
-        }
-
-        public String getAssociation() {
-            return association;
-        }
-    }
-
     private void askLeader() {
-        players.get(leader).askForAssociation();
-        boolean received = false;
-        while (!received) {
+        choiceLock.lock();
+        try {
+            leadersCard = -1;
+            leadersAssociation = null;
+            players.get(leader).askForAssociation();
+        }
+        finally {
+            choiceLock.unlock();
+        }
+        while (leadersCard == -1) {
+            choiceLock.lock();
             try {
-                Thread.sleep(PERIOD);
+                choiceExpectation.await(CHOICE_WAIT_TIME, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
             } finally {
-                synchronized (choiceMessages) {
-                    if (!choiceMessages.isEmpty()) {
-                        received = true;
-                        ChoiceMessage message = choiceMessages.getLast();
-                        choiceMessages.removeLast();
-                        association = new Association(message.getCard(),
-                                message.getAssociation());
-                    }
-                }
+                choiceLock.unlock();
             }
         }
-        choices[leader] = association.getCard();
+        choices[leader] = leadersCard;
     }
 
     private void playChoice() {
-        for (int i = 0; i < players.size(); i++) {
-            if (i != leader) {
-                players.get(i).askForCard(association.getForm());
-            }
-        }
-
-        long startTime = System.currentTimeMillis();
-        int receivedChoices = 1;
-        while (System.currentTimeMillis() < startTime + CHOICE_WAIT_TIME &&
-                receivedChoices < players.size()) {
-            try {
-                Thread.sleep(PERIOD);
-            } catch (InterruptedException e){}
-            synchronized (choiceMessages) {
-                while (!choiceMessages.isEmpty()) {
-                    ChoiceMessage message = choiceMessages.getFirst();
-                    choiceMessages.removeFirst();
-
-                    int playerIndex = players.indexOf(message.getPlayer());
-
-                    choices[playerIndex] = message.getCard();
-                    receivedChoices++;
+        choiceLock.lock();
+        try {
+            for (int i = 0; i < players.size(); i++) {
+                if (i != leader) {
+                    players.get(i).askForCard(leadersAssociation);
                 }
+            }
+            receivedChoices = 1;
+        } finally {
+            choiceLock.unlock();
+        }
+        long deadline = System.currentTimeMillis() + CHOICE_WAIT_TIME;
+        while (System.currentTimeMillis() < deadline &&
+                receivedChoices < players.size()) {
+            choiceLock.lock();
+            try {
+                choiceExpectation.await(deadline - System.currentTimeMillis(),
+                        TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+            } finally {
+                choiceLock.unlock();
             }
         }
     }
 
     private void playVote() {
-        for (int i = 0; i < players.size(); i++) {
-            if (i != leader) {
-                players.get(i).askForVote(association.getForm(), choices);
+        choiceLock.lock();
+        try {
+            for (int i = 0; i < players.size(); i++) {
+                if (i != leader) {
+                    players.get(i).askForVote(leadersAssociation, choices);
+                }
             }
+            receivedVotes = 0;
+        } finally {
+            choiceLock.unlock();
         }
 
-        long startTime = System.currentTimeMillis();
-        int receivedVoices = 0;
-        while (System.currentTimeMillis() < startTime + VOTE_WAIT_TIME &&
-                receivedVoices < players.size() - 1) {
+        long deadline = System.currentTimeMillis() + CHOICE_WAIT_TIME;
+        while (System.currentTimeMillis() < deadline &&
+                receivedVotes < players.size() - 1) {
+            choiceLock.lock();
             try {
-                Thread.sleep(PERIOD);
-            } catch (InterruptedException e) {}
-            synchronized (choiceMessages) {
-                while (!choiceMessages.isEmpty()) {
-                    ChoiceMessage message = choiceMessages.getFirst();
-                    choiceMessages.removeFirst();
-
-                    int playerIndex = players.indexOf(message.getPlayer());
-
-                    votes[playerIndex] = message.getCard();
-                    receivedVoices++;
-                }
+                choiceExpectation.await(deadline - System.currentTimeMillis(),
+                        TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+            } finally {
+                choiceLock.unlock();
             }
         }
     }
@@ -284,13 +273,13 @@ public class Game implements Runnable {
     private void countScores() {
         int guessed = 0;
         for (int i = 0; i < players.size(); i++) {
-            if (i != leader && votes[i] == association.getCard()) {
+            if (i != leader && votes[i] == leadersCard) {
                 guessed++;
             }
         }
         if (guessed == 0 || guessed == players.size() - 1) {
             for (int i = 0; i < players.size(); i++) {
-                if (i != leader && votes[i] == association.getCard()) {
+                if (i != leader && votes[i] == leadersCard) {
                     scores[i] += 2;
                 }
             }
@@ -298,7 +287,7 @@ public class Game implements Runnable {
             scores[leader] += 3;
             for (int i = 0; i < players.size(); i++) {
                 if (i != leader) {
-                    if (votes[i] == association.getCard()) {
+                    if (votes[i] == leadersCard) {
                         scores[i] += 3;
                     } else {
                         int voteIndex = 0;

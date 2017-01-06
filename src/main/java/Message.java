@@ -142,8 +142,7 @@ public class Message {
         try {
             card = stream.readLong();
             association = stream.readUTF();
-            client.getPlayer().getGame().addChoiceMessage(new
-                    Game.ChoiceMessage(client.getPlayer(), card, association));
+            client.getPlayer().getGame().setLeadersAssociation(card, association);
         } catch (IOException e) {}
     }
 
@@ -151,8 +150,7 @@ public class Message {
         long card;
         try {
             card = stream.readLong();
-            client.getPlayer().getGame().addChoiceMessage(new
-                    Game.ChoiceMessage(client.getPlayer(), card));
+            client.getPlayer().getGame().setChoice(client.getPlayer(), card);
         } catch (IOException e) {}
     }
 
@@ -160,8 +158,7 @@ public class Message {
         long card;
         try {
             card = stream.readLong();
-            client.getPlayer().getGame().addChoiceMessage(new
-                    Game.ChoiceMessage(client.getPlayer(), card));
+            client.getPlayer().getGame().setVote(client.getPlayer(), card);
         } catch (IOException e) {}
     }
 
@@ -213,10 +210,14 @@ public class Message {
     }
 
     private void readQuitFriendGameMessage() {
-        FriendsGameCreator.getGameCreator(client.getPlayer().getName())
-                          .sendFriendPlayerMessage(false,
-                                                   client.getPlayer().getName());
-        FriendsGameCreator.removePlayer(client.getPlayer().getName());
+        try {
+            FriendsGameCreator.getGameCreator(client.getPlayer().getName())
+                    .sendFriendPlayerMessage(false,
+                            client.getPlayer().getName());
+            FriendsGameCreator.removePlayer(client.getPlayer().getName());
+        } catch (NullPointerException e) {
+            System.out.println("Attempt to remove non-existent player.");
+        }
     }
 
     private void readPasswordChangeRequestMessage(DataInputStream stream) {

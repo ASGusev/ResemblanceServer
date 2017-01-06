@@ -18,7 +18,6 @@ public class MessageModule {
             while (!Thread.currentThread().isInterrupted()) {
                 Socket socket = ss.accept();
                 System.out.println("Got a client");
-                System.out.println();
 
                 ClientThread curClient = new ClientThread(socket);
                 curClient.start();
@@ -90,15 +89,13 @@ public class MessageModule {
                         }
                         break;
                     } catch (Exception e) {
-                        e.printStackTrace();
                         try {
                             sleep(SLEEP_TIME);
-                        } catch (InterruptedException e1) {
-                            e1.printStackTrace();
-                        }
+                        } catch (InterruptedException e1) {}
                     }
                 }
                 if (typeMessage == -1) {
+                    System.out.println("Player " + player.getName() + " disconnected.");
                     connectionError = true;
                     return;
                 }
