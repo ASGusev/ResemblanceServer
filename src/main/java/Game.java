@@ -9,9 +9,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 public class Game implements Runnable {
-    private static final long CHOICE_WAIT_TIME = 60 * 1000;
     private static final int INITIAL_CARDS_NUMBER = 6;
 
+    private final long expectationTime;
     private final ArrayList<Player> players;
     private final ArrayDeque<Long> deck;
     private final int[] scores;
@@ -26,9 +26,11 @@ public class Game implements Runnable {
     private int receivedChoices;
     private int receivedVotes;
 
-    Game(ArrayList<Player> players, List<Long> cards, int roundsNumber) {
+    Game(ArrayList<Player> players, List<Long> cards, int roundsNumber,
+         long expectationTime) {
         this.players = players;
         this.roundsNumber = roundsNumber;
+        this.expectationTime = expectationTime;
 
         Collections.shuffle(cards);
 
@@ -42,7 +44,7 @@ public class Game implements Runnable {
 
     public void run() {
         byte[] gameStartMessage = makeGameStartMessage();
-
+        System.out.println(expectationTime);
         for(Player player: players) {
             player.setGame(this);
             player.sendMessage(gameStartMessage);
@@ -144,6 +146,7 @@ public class Game implements Runnable {
             for (Player p: players) {
                 out.writeUTF(p.getName());
             }
+            out.writeLong(expectationTime);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -208,7 +211,7 @@ public class Game implements Runnable {
         while (leadersCard == -1) {
             choiceLock.lock();
             try {
-                choiceExpectation.await(CHOICE_WAIT_TIME, TimeUnit.MILLISECONDS);
+                choiceExpectation.await(expectationTime, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
             } finally {
                 choiceLock.unlock();
@@ -229,7 +232,7 @@ public class Game implements Runnable {
         } finally {
             choiceLock.unlock();
         }
-        long deadline = System.currentTimeMillis() + CHOICE_WAIT_TIME;
+        long deadline = System.currentTimeMillis() + expectationTime;
         while (System.currentTimeMillis() < deadline &&
                 receivedChoices < players.size()) {
             choiceLock.lock();
@@ -256,7 +259,7 @@ public class Game implements Runnable {
             choiceLock.unlock();
         }
 
-        long deadline = System.currentTimeMillis() + CHOICE_WAIT_TIME;
+        long deadline = System.currentTimeMillis() + expectationTime;
         while (System.currentTimeMillis() < deadline &&
                 receivedVotes < players.size() - 1) {
             choiceLock.lock();

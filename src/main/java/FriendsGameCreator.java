@@ -9,16 +9,21 @@ public class FriendsGameCreator {
     private final ArrayList<Player> players;
     private final int roundsNumber;
     private final ArrayList<Long> cards;
+    private final long expectationTime;
 
-    private FriendsGameCreator (Player creator, int roundsNumber, ArrayList<Long> cards) {
+    private FriendsGameCreator (Player creator, int roundsNumber,
+                                ArrayList<Long> cards, long expectationTime) {
         players = new ArrayList<>();
         players.add(creator);
         this.roundsNumber = roundsNumber;
         this.cards = cards;
+        this.expectationTime = expectationTime;
     }
 
-    public static void addGame(Player creator, int roundsNumber, ArrayList<Long> cards) {
-        FriendsGameCreator game = new FriendsGameCreator(creator, roundsNumber, cards);
+    public static void addGame(Player creator, int roundsNumber,
+                               ArrayList<Long> cards, long expectationTime) {
+        FriendsGameCreator game = new FriendsGameCreator(creator, roundsNumber,
+                cards, expectationTime);
         gameByPlayer.put(creator.getName(), game);
     }
 
@@ -29,7 +34,8 @@ public class FriendsGameCreator {
 
     public static void startGame(String name) {
         FriendsGameCreator gameCreator = gameByPlayer.get(name);
-        Game game = new Game(gameCreator.players, gameCreator.cards, gameCreator.roundsNumber);
+        Game game = new Game(gameCreator.players, gameCreator.cards,
+                gameCreator.roundsNumber, gameCreator.expectationTime);
         new Thread(game).start();
         for (Player player: gameCreator.players) {
             gameByPlayer.remove(player.getName());

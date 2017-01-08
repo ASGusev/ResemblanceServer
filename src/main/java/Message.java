@@ -168,9 +168,11 @@ public class Message {
             int setSize = stream.readInt();
             ArrayList <Long> cards = new ArrayList<Long>();
             for (int i = 0; i < setSize; i++) {
-                cards.add((long)stream.readInt());
+                cards.add(stream.readLong());
             }
-            FriendsGameCreator.addGame(client.getPlayer(), roundsNumber, cards);
+            long expectationTime = stream.readLong();
+            FriendsGameCreator.addGame(client.getPlayer(), roundsNumber, cards,
+                    expectationTime);
         } catch (IOException e) {
             e.printStackTrace();
         }
