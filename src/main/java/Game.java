@@ -44,7 +44,6 @@ public class Game implements Runnable {
 
     public void run() {
         byte[] gameStartMessage = makeGameStartMessage();
-        System.out.println(expectationTime);
         for(Player player: players) {
             player.setGame(this);
             player.sendMessage(gameStartMessage);
@@ -136,6 +135,15 @@ public class Game implements Runnable {
         }
     }
 
+    public void processChatMessage(Player author, String time, String text) {
+        byte[] chatMessage = makeChatMessage(author.getName(), time, text);
+        for (Player player: players) {
+            if (!player.equals(author)) {
+                player.sendMessage(chatMessage);
+            }
+        }
+    }
+
     private byte[] makeGameStartMessage() {
         ByteArrayOutputStream byteOS = new ByteArrayOutputStream(100);
         DataOutputStream out = new DataOutputStream(byteOS);
@@ -170,6 +178,21 @@ public class Game implements Runnable {
             for (int rating: newRatings) {
                 out.writeInt(rating);
             }
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return byteOS.toByteArray();
+    }
+
+    private byte[] makeChatMessage(String author, String time, String text) {
+        ByteArrayOutputStream byteOS = new ByteArrayOutputStream(200);
+        DataOutputStream out = new DataOutputStream(byteOS);
+        try {
+            out.writeInt(Message.INGOING_CHAT_MESSAGE);
+            out.writeUTF(author);
+            out.writeUTF(time);
+            out.writeUTF(text);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();

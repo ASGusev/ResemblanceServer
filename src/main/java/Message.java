@@ -29,6 +29,8 @@ public class Message {
     private final static int QUIT_FIEND_GAME_TYPE = 23;
     private final static int PASSWORD_CHANGE_REQUEST_TYPE = 24;
     final public static int PASSWORD_CHANGE_RESPONSE_TYPE = 25;
+    private final static int OUTGOING_CHAT_MESSAGE_TYPE = 26;
+    final public static int INGOING_CHAT_MESSAGE = 27;
 
     private final MessageModule.ClientThread client;
     private final int type;
@@ -84,6 +86,9 @@ public class Message {
                 break;
             case PASSWORD_CHANGE_REQUEST_TYPE:
                 readPasswordChangeRequestMessage(in);
+                break;
+            case OUTGOING_CHAT_MESSAGE_TYPE:
+                readChatMessage(in);
                 break;
         }
     }
@@ -237,6 +242,18 @@ public class Message {
                 client.getPlayer().sendPasswordChangeResponseMessage(PASSWORD_CHANGE_FAILURE);
             }
         } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void readChatMessage(DataInputStream stream) {
+        System.out.println("Chat");
+        try {
+            String time = stream.readUTF();
+            String text = stream.readUTF();
+            client.getPlayer().getGame().processChatMessage(client.getPlayer(),
+                    time, text);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
