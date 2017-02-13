@@ -32,9 +32,10 @@ public class Game implements Runnable {
         this.roundsNumber = roundsNumber;
         this.expectationTime = expectationTime;
 
-        Collections.shuffle(cards);
+        List<Long> cardsCopy = new ArrayList<Long>(cards);
+        Collections.shuffle(cardsCopy);
 
-        deck = new ArrayDeque<Long>(cards);
+        deck = new ArrayDeque<Long>(cardsCopy);
         choices = new long[players.size()];
         scores = new int[players.size()];
         votes = new long[players.size()];

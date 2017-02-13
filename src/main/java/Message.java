@@ -247,7 +247,6 @@ public class Message {
     }
 
     private void readChatMessage(DataInputStream stream) {
-        System.out.println("Chat");
         try {
             String time = stream.readUTF();
             String text = stream.readUTF();
