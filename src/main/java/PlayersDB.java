@@ -49,7 +49,7 @@ public class PlayersDB {
         int rating = baseRet.getInt("rating");
         String password = baseRet.getString("password_hash");
 
-        return new Player(nick, rating, password);
+        return new Player(nick, rating);
     }
 
     public static void register(String name, String password) throws SQLException {

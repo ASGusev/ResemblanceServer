@@ -7,14 +7,12 @@ import java.util.function.Consumer;
 public class Player {
     private int rating;
     private final String name;
-    //private String password = null;
     private Game game;
     private MessageModule.ClientThread messageThread;
 
-    Player(String name, int rating, String password) {
+    Player(String name, int rating) {
         this.name = name;
         this.rating = rating;
-        //this.password = password;
     }
 
     @Override

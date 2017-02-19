@@ -2,6 +2,8 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 public class MessageModule {
@@ -30,7 +32,7 @@ public class MessageModule {
         private final Socket socket;
         private final DataInputStream in;
         private final DataOutputStream out;
-        private volatile Boolean connectionError = false;
+        private volatile boolean connectionError = false;
         private Player player = null;
 
         ClientThread(Socket socket) {
@@ -116,33 +118,26 @@ public class MessageModule {
         }
 
         public void sendMessage(final byte[] message) {
-            synchronized (connectionError) {
-                if (connectionError) {
-                    return;
+            if (connectionError) {
+                System.out.println("Unable to send message.");
+                return;
+            }
+
+            boolean messageIsSent = false;
+            for (int i = 0; i < MAX_CNT_TO_RECONNECT && !messageIsSent; i++) {
+                messageIsSent = tryToSendMessage(message);
+                if (!messageIsSent) {
+                    try {
+                        sleep(SLEEP_TIME);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-            Thread curThread =  new Thread() {
-                @Override
-                public void run() {
-                    boolean messageIsSent = false;
-                    for (int i = 0; i < MAX_CNT_TO_RECONNECT && !messageIsSent; i++) {
-                        messageIsSent = tryToSendMessage(message);
-                        if (!messageIsSent) {
-                            try {
-                                sleep(SLEEP_TIME);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    if (!messageIsSent) {
-                        synchronized (connectionError) {
-                            connectionError = true;
-                        }
-                    }
-                }
-            };
-            curThread.start();
+            if (!messageIsSent) {
+                System.out.println("Connection error.");
+                connectionError = true;
+            }
         }
     }
 }
