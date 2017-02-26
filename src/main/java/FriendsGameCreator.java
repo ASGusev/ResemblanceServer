@@ -10,26 +10,36 @@ public class FriendsGameCreator {
     private final int roundsNumber;
     private final ArrayList<Long> cards;
     private final long expectationTime;
+    private final long cardSetHash;
 
     private FriendsGameCreator (Player creator, int roundsNumber,
-                                ArrayList<Long> cards, long expectationTime) {
+                                ArrayList<Long> cards, long expectationTime,
+                                long cardSetHash) {
         players = new ArrayList<>();
         players.add(creator);
         this.roundsNumber = roundsNumber;
         this.cards = cards;
         this.expectationTime = expectationTime;
+        this.cardSetHash = cardSetHash;
     }
 
     public static void addGame(Player creator, int roundsNumber,
-                               ArrayList<Long> cards, long expectationTime) {
+                               ArrayList<Long> cards, long expectationTime,
+                               long cardSetHash) {
         FriendsGameCreator game = new FriendsGameCreator(creator, roundsNumber,
-                cards, expectationTime);
+                cards, expectationTime, cardSetHash);
         gameByPlayer.put(creator.getName(), game);
     }
 
     public static void addPlayer(String creatorName, Player player) {
-        gameByPlayer.get(creatorName).players.add(player);
-        gameByPlayer.put(player.getName(), gameByPlayer.get(creatorName));
+        if (gameByPlayer.containsKey(creatorName)) {
+            FriendsGameCreator creator = gameByPlayer.get(creatorName);
+            creator.players.add(player);
+            gameByPlayer.put(player.getName(), creator);
+            creator.players.get(0).sendFriendPlayerMessage(true, player.getName());
+        } else {
+            player.sendGameCancelledMessage();
+        }
     }
 
     public static void startGame(String name) {

@@ -4,15 +4,16 @@ public class PlayersDB {
     private static final int DEFAULT_RATING = 0;
     private static final String DBNAME = "players.db";
 
-    private static Connection base;
     private static Statement statement;
 
-    static {
+    public static void connect() {
         try {
-            base = DriverManager.getConnection("jdbc:sqlite:" + DBNAME);
+            Connection base = DriverManager.getConnection("jdbc:sqlite:" + DBNAME);
             statement = base.createStatement();
+            statement.execute("CREATE TABLE IF NOT EXISTS players (nickname TEXT PRIMARY KEY, rating INTEGER, password_hash TEXT);");
         } catch (SQLException e) {
             System.out.println("Error during connecting to database.");
+            e.printStackTrace();
         }
     }
 

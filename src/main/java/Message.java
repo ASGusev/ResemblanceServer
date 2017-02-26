@@ -176,8 +176,9 @@ public class Message {
                 cards.add(stream.readLong());
             }
             long expectationTime = stream.readLong();
+            long cardSetHash = stream.readLong();
             FriendsGameCreator.addGame(client.getPlayer(), roundsNumber, cards,
-                    expectationTime);
+                    expectationTime, cardSetHash);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -186,14 +187,7 @@ public class Message {
     private void readJoinFriendGameMessage(DataInputStream stream) {
         try {
             String gameCreatorName = stream.readUTF();
-            if (FriendsGameCreator.gameExists(gameCreatorName)) {
-                FriendsGameCreator.addPlayer(gameCreatorName, client.getPlayer());
-
-                FriendsGameCreator.getGameCreator(gameCreatorName).
-                        sendFriendPlayerMessage(true, client.getPlayer().getName());
-            } else {
-                client.getPlayer().sendGameCancelledMessage();
-            }
+            FriendsGameCreator.addPlayer(gameCreatorName, client.getPlayer());
         } catch (IOException e) {
             e.printStackTrace();
         }

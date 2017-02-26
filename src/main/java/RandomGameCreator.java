@@ -11,7 +11,7 @@ public class RandomGameCreator {
         synchronized (RandomGameCreator.class) {
             waitingPlayers.add(player);
             if (waitingPlayers.size() == PLAYERS_PER_GAME) {
-                Game game = new Game(waitingPlayers, Main.DEFAULT_CARD_SETS[0],
+                Game game = new Game(waitingPlayers, Main.DEFAULT_CARD_SET,
                         DEFAULT_ROUNDS_NUMBER, DEFAULT_EXPECTATION_TIME);
                 new Thread(game).start();
                 waitingPlayers = new ArrayList<>();
